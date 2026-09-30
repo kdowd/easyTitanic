@@ -1,0 +1,1599 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why JOINs Exist — La Liga Edition</title>
+  <style>
+    :root {
+      --navy: #0b2545;
+      --deep: #13315c;
+      --teal: #1b6ca8;
+      --sky: #e8f1f8;
+      --gold: #f0b429;
+      --good: #1a7f5a;
+      --good-bg: #e4f5ee;
+      --bad: #b3261e;
+      --bad-bg: #fdecea;
+      --ink: #1d2b3a;
+      --muted: #5b6b7c;
+      --line: #d7e2ec;
+      --card: #ffffff;
+      --bg: #eef3f8;
+      --code-bg: #0b2545;
+      --code-fg: #a8e6cf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .88em;
+      background: var(--sky);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--deep);
+    }
+
+    /* ---------- Header ---------- */
+    header.hero {
+      background: linear-gradient(150deg, var(--navy) 0%, var(--deep) 55%, #1b4f7a 100%);
+      color: #fff;
+      padding: 40px 22px 32px;
+      text-align: center;
+      border-bottom: 5px solid var(--gold);
+    }
+
+    header.hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 4vw, 2.3rem);
+      letter-spacing: .3px;
+    }
+
+    header.hero p {
+      margin: 0 auto;
+      max-width: 660px;
+      color: #cfe0ef;
+      font-size: 1rem;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: rgba(240, 180, 41, .16);
+      border: 1px solid rgba(240, 180, 41, .55);
+      color: var(--gold);
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    /* ---------- Layout ---------- */
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 18px 60px;
+    }
+
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 26px;
+    }
+
+    nav.toc a {
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--deep);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 14px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    nav.toc a:hover {
+      background: var(--sky);
+      border-color: var(--teal);
+    }
+
+    section.part {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px 24px 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+    }
+
+    section.part>h2 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .part-num {
+      flex: 0 0 34px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-size: .95rem;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .part-sub {
+      color: var(--muted);
+      font-size: .95rem;
+      margin: 0 0 18px;
+    }
+
+    section.part h3 {
+      font-size: 1.02rem;
+      color: var(--deep);
+      margin: 22px 0 8px;
+    }
+
+    section.part p {
+      margin: 0 0 12px;
+    }
+
+    /* ---------- Objectives ---------- */
+    ul.objectives {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    ul.objectives li {
+      position: relative;
+      padding: 8px 0 8px 34px;
+      border-bottom: 1px solid #f0f5fa;
+      font-size: .96rem;
+    }
+
+    ul.objectives li:last-child {
+      border-bottom: none;
+    }
+
+    ul.objectives li::before {
+      content: "✓";
+      position: absolute;
+      left: 6px;
+      top: 7px;
+      color: var(--teal);
+      font-weight: 800;
+    }
+
+    /* ---------- Code + output blocks ---------- */
+    .block {
+      margin: 0 0 14px;
+    }
+
+    .block-label {
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    pre.sql {
+      margin: 0;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 13px 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .84rem;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    pre.out {
+      margin: 0;
+      background: #fbfdff;
+      color: var(--deep);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      padding: 12px 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .82rem;
+      line-height: 1.5;
+      white-space: pre;
+    }
+
+    pre.out.err {
+      border-left-color: var(--bad);
+      color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    /* ---------- Data tables ---------- */
+    .scroll-x {
+      overflow-x: auto;
+      margin: 0 0 14px;
+    }
+
+    table.data {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: .82rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table.data th {
+      background: var(--navy);
+      color: #fff;
+      text-align: left;
+      padding: 8px 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    table.data td {
+      padding: 7px 11px;
+      border-top: 1px solid #eef3f8;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    table.data td.name {
+      color: var(--deep);
+      font-weight: 600;
+    }
+
+    td.repeat {
+      background: #fff8e6;
+    }
+
+    .repeat-key {
+      font-size: .8rem;
+      color: var(--muted);
+      margin: -6px 0 14px;
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      background: #fff8e6;
+      border: 1px solid #eddca6;
+      border-radius: 3px;
+      vertical-align: -1px;
+      margin-right: 4px;
+    }
+
+    /* ---------- Callouts ---------- */
+    .callout {
+      border-radius: 11px;
+      padding: 14px 16px;
+      margin: 0 0 14px;
+      font-size: .93rem;
+    }
+
+    .callout h4 {
+      margin: 0 0 6px;
+      font-size: .95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout p:last-child {
+      margin-bottom: 0;
+    }
+
+    .callout.trap {
+      background: var(--bad-bg);
+      border-left: 4px solid var(--bad);
+      color: #7a1a15;
+    }
+
+    .callout.trap h4 {
+      color: var(--bad);
+    }
+
+    .callout.key {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      color: var(--deep);
+    }
+
+    .callout.key h4 {
+      color: var(--teal);
+    }
+
+    .callout.win {
+      background: var(--good-bg);
+      border-left: 4px solid var(--good);
+      color: #10583e;
+    }
+
+    .callout.win h4 {
+      color: var(--good);
+    }
+
+    .callout.reset {
+      background: #fff9e9;
+      border-left: 4px solid var(--gold);
+      color: #6b4b00;
+    }
+
+    .callout.reset h4 {
+      color: #8a5a00;
+    }
+
+    /* ---------- Join key diagram ---------- */
+    .key-diagram {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: var(--sky);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 14px;
+      margin: 0 0 14px;
+    }
+
+    .key-table {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      overflow: hidden;
+      min-width: 190px;
+    }
+
+    .key-table .cap {
+      background: var(--navy);
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      letter-spacing: .5px;
+    }
+
+    .key-table .row {
+      display: flex;
+      justify-content: space-between;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .78rem;
+      padding: 4px 11px;
+      border-top: 1px solid #eef3f8;
+    }
+
+    .key-table .row b {
+      color: var(--teal);
+    }
+
+    .key-arrow {
+      text-align: center;
+      font-size: .8rem;
+      font-weight: 700;
+      color: var(--teal);
+    }
+
+    .key-arrow .big {
+      font-size: 1.5rem;
+      display: block;
+      line-height: 1;
+    }
+
+    /* ---------- Clause table ---------- */
+    table.clauses {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: .86rem;
+      margin: 0 0 14px;
+    }
+
+    table.clauses td {
+      padding: 8px 11px;
+      border-top: 1px solid #eef3f8;
+      vertical-align: top;
+    }
+
+    table.clauses tr:first-child td {
+      border-top: none;
+    }
+
+    table.clauses td:first-child {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: var(--deep);
+      font-weight: 600;
+      white-space: nowrap;
+      background: #f7fafd;
+    }
+
+    /* ---------- Practice ---------- */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(238, 243, 248, .94);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin: 0 0 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .07);
+    }
+
+    .progress-wrap {
+      flex: 1 1 180px;
+      min-width: 160px;
+    }
+
+    .progress-label {
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .progress-track {
+      height: 9px;
+      background: #dbe6f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--gold));
+      border-radius: 999px;
+      transition: width .3s ease;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      border-radius: 9px;
+      padding: 9px 16px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform .08s ease, background .15s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .btn-check {
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .btn-check:hover {
+      background: var(--deep);
+    }
+
+    .btn-clear {
+      background: #fff;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .btn-clear:hover {
+      color: var(--bad);
+      border-color: #eebcb8;
+    }
+
+    .score {
+      display: none;
+      margin: 0 0 20px;
+      padding: 15px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+    }
+
+    .score.show {
+      display: block;
+    }
+
+    .score h3 {
+      margin: 0 0 4px;
+      font-size: 1.05rem;
+      color: var(--navy);
+    }
+
+    .score p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .score .big {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    .q {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--teal);
+      border-radius: 14px;
+      padding: 18px 20px 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+    }
+
+    .q.correct {
+      border-left-color: var(--good);
+    }
+
+    .q.wrong {
+      border-left-color: var(--bad);
+    }
+
+    .q-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .q-num {
+      width: 29px;
+      height: 29px;
+      flex: 0 0 29px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: .85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .concept {
+      margin-left: auto;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .6px;
+      color: var(--teal);
+      background: var(--sky);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .q-text {
+      font-size: 1rem;
+      margin: 0 0 13px;
+      font-weight: 600;
+      color: var(--deep);
+    }
+
+    .answer-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .answer-row label {
+      font-size: .86rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input.ans {
+      width: 140px;
+      padding: 9px 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid var(--line);
+      border-radius: 9px;
+      background: #fbfdff;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    input.ans:focus {
+      outline: none;
+      border-color: var(--teal);
+      background: #fff;
+    }
+
+    input.ans.correct {
+      border-color: var(--good);
+      background: var(--good-bg);
+    }
+
+    input.ans.wrong {
+      border-color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    .result-icon {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .result-icon.ok {
+      color: var(--good);
+    }
+
+    .result-icon.no {
+      color: var(--bad);
+    }
+
+    .q-actions {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .q-actions button {
+      font-size: .8rem;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--deep);
+    }
+
+    .q-actions button:hover {
+      background: var(--sky);
+      border-color: #b9cfe2;
+    }
+
+    .q-actions button.active {
+      background: var(--sky);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .hint,
+    .reveal {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: .89rem;
+    }
+
+    .hint.open,
+    .reveal.open {
+      display: block;
+    }
+
+    .hint {
+      background: #fff9e9;
+      border-left: 4px solid var(--gold);
+      color: #6b4b00;
+    }
+
+    .reveal {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      color: var(--deep);
+    }
+
+    .reveal .ans-line {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 8px;
+    }
+
+    .reveal .note {
+      margin-top: 9px;
+      font-size: .85rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 18px 60px;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    footer .foot-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    footer h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: .95rem;
+    }
+
+    .kbd {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: .8rem;
+      font-family: inherit;
+      color: var(--deep);
+    }
+
+    @media (max-width:520px) {
+      section.part {
+        padding: 18px 16px;
+      }
+
+      .concept {
+        margin-left: 0;
+      }
+
+      input.ans {
+        flex: 1 1 110px;
+        width: auto;
+      }
+    }
+
+    .hero-lockup {
+      display: grid;
+      grid-template-columns: 1fr;
+      /* place-content: stretch; */
+      place-items: center;
+
+
+
+      img {
+        stroke: red;
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="hero">
+    <div class="hero-tag">PostgreSQL &amp; psql · Lesson</div>
+    <div class="hero-lockup">
+      <img src="./football.svg" alt="">
+      <h1>Why JOINs Exist</h1>
+    </div>
+
+    <p>One table seems easier — until you try to keep it correct. Build a La Liga database, watch a single
+      table fall apart, then split it in two and stitch it back together with a JOIN.</p>
+  </header>
+
+  <main>
+
+    <nav class="toc">
+      <a href="#goals">Goals</a>
+      <a href="#setup">Setup</a>
+      <a href="#part1">1 · The problem</a>
+      <a href="#part2">2 · Split it</a>
+      <a href="#part3">3 · The JOIN</a>
+      <a href="#traps">Traps</a>
+      <a href="#practice">Practice</a>
+    </nav>
+
+    <!-- ============ GOALS ============ -->
+    <section class="part" id="goals">
+      <h2><span class="part-num">✓</span> What you will be able to do</h2>
+      <p class="part-sub">By the end of this page you can:</p>
+      <ul class="objectives">
+        <li>Explain what goes wrong when the same fact is stored on many rows.</li>
+        <li>Split one wide table into two tables joined by an <code>id</code>.</li>
+        <li>Write a <code>SELECT</code> that pulls columns from <b>both</b> tables using <code>JOIN … ON</code>, and
+          filter it with <code>WHERE</code>.</li>
+      </ul>
+    </section>
+
+    <!-- ============ SETUP ============ -->
+    <section class="part" id="setup">
+      <h2><span class="part-num">⚙</span> Setup — load the La Liga data</h2>
+      <p class="part-sub">Six Spanish clubs, four players each. Small enough to check by eye.</p>
+      <p>Create a database and load the file (it is safe to run more than once — it rebuilds everything):</p>
+      <div class="block">
+        <div class="block-label">The steps in Terminal</div>
+        <pre class="sql">
+psql -U postgres
+CREATE DATABASE laliga; 
+\c laliga
+\i laliga.sql
+      </pre>
+
+      </div>
+      <p>Check you have what you should have — <b>24</b>, <b>24</b> and <b>6</b>:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) FROM players_flat;
+SELECT COUNT(*) FROM players;
+SELECT COUNT(*) FROM teams;</pre>
+      </div>
+      <p><b>Load the file with <code>-f</code> or <code>\i</code></b> — some names contain accents
+        (<code>Atlético de Madrid</code>), which can get mangled if you type them straight into a Windows terminal.</p>
+    </section>
+
+    <!-- ============ PART 1 ============ -->
+    <section class="part" id="part1">
+      <h2><span class="part-num">1</span> The problem: one big table</h2>
+      <p class="part-sub">The "obvious" design — put everything about a player in one row.</p>
+
+      <p>Here is <code>players_flat</code>. It has one row per player and carries the club's name, city and
+        stadium along for the ride:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT player_name, position, team_name, city, stadium
+FROM players_flat
+ORDER BY player_id
+LIMIT 5;</pre>
+      </div>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>player_name</th>
+              <th>position</th>
+              <th>team_name</th>
+              <th>city</th>
+              <th>stadium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">Thibaut Courtois</td>
+              <td>Goalkeeper</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td class="name">Éder Militão</td>
+              <td>Defender</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td class="name">Jude Bellingham</td>
+              <td>Midfielder</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td class="name">Vinícius Júnior</td>
+              <td>Forward</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td class="name">Marc-André ter Stegen</td>
+              <td>Goalkeeper</td>
+              <td class="repeat">FC Barcelona</td>
+              <td class="repeat">Barcelona</td>
+              <td class="repeat">Camp Nou</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="repeat-key"><span class="swatch"></span> The highlighted cells are <b>the same three facts typed again
+          on every player's row</b>.</p>
+
+      <h3>How much is repeated?</h3>
+      <p>Count it. There are 24 rows, but the club information is only really six different things:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) AS all_rows,
+       COUNT(DISTINCT team_name) AS distinct_clubs
+FROM players_flat;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out"> all_rows | distinct_clubs 
+----------+----------------
+       24 |              6
+(1 row)</pre>
+      </div>
+      <p>Six facts, written <b>24 times</b>. That is the crack the rest of this lesson widens.</p>
+
+      <h3>Problem 1 — fixing a typo means finding every copy</h3>
+      <p>Sevilla's ground gets a new name. You must update <b>every player row</b> for that club:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">UPDATE players_flat
+SET stadium = 'Estadio Ramón Sánchez-Pizjuán'
+WHERE team_name = 'Sevilla FC';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out">UPDATE 4</pre>
+      </div>
+      <p><code>UPDATE 4</code> — four rows changed for <b>one</b> fact. And if you miss a row, your data now disagrees
+        with itself:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT DISTINCT team_name, stadium
+FROM players_flat
+WHERE team_name = 'Sevilla FC';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out"> team_name  |            stadium            
+------------+-------------------------------
+ Sevilla FC | Estadio Ramón Sánchez-Pizjuán
+ Sevilla FC | RSP
+(2 rows)</pre>
+      </div>
+      <div class="callout trap">
+        <h4>⚠ Same club, two stadiums</h4>
+        <p>Nothing stopped that. The table has no idea those two rows are describing the same club — it just stores
+          whatever text you give it.</p>
+      </div>
+
+      <h3>Problem 2 — you cannot store a club that has no players yet</h3>
+      <p>Valencia CF joins the league, but you have not signed anyone. There is nowhere to put the club, because a row
+        <i>is</i> a player. So you end up inventing an empty player:
+      </p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">INSERT INTO players_flat (player_id, player_name, position, team_name, city, stadium)
+VALUES (25, NULL, NULL, 'Valencia CF', 'Valencia', 'Mestalla');</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out">INSERT 0 1</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT * FROM players_flat WHERE player_id = 25;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out"> player_id | player_name | position |  team_name  |   city   | stadium  
+-----------+-------------+----------+-------------+----------+----------
+        25 |             |          | Valencia CF | Valencia | Mestalla
+(1 row)</pre>
+      </div>
+      <div class="callout trap">
+        <h4>⚠ A player who is not a player</h4>
+        <p>Row 25 has a club but no person. Any query that counts players now has to remember to ignore it.</p>
+      </div>
+
+      <h3>Problem 3 — deleting a player can delete a club</h3>
+      <p>Sevilla is relegated, so you clear out their players. Watch what happens to the <i>club</i>:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">DELETE FROM players_flat WHERE team_name = 'Sevilla FC';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) AS rows_left,
+       COUNT(DISTINCT team_name) AS clubs_left
+FROM players_flat;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out"> rows_left | clubs_left 
+-----------+------------
+        20 |          5
+(1 row)</pre>
+      </div>
+      <p>Sevilla FC was a real club with a real stadium. It is simply <b>gone</b> — deleted along with its players,
+        even though nobody asked to delete the club.</p>
+
+      <div class="callout reset">
+        <h4>↺ Put it back</h4>
+        <p>You have just deleted rows. Re-run the loader to start clean:</p>
+        <pre class="sql" style="margin-top:8px">psql -U postgres -d laliga -f laliga.sql</pre>
+      </div>
+
+      <div class="callout key">
+        <h4>💡 The name for all this</h4>
+        <p>Repetition causes <b>update</b>, <b>insert</b> and <b>delete</b> problems like these. The fix is always the
+          same: <b>store each fact once</b>, and point at it from everywhere else.</p>
+      </div>
+    </section>
+
+    <!-- ============ PART 2 ============ -->
+    <section class="part" id="part2">
+      <h2><span class="part-num">2</span> Split it into two tables</h2>
+      <p class="part-sub">Facts about a club live with the club. Facts about a player live with the player.</p>
+
+      <p>Now the club is stored <b>once</b>, in its own table, and gets a number to be known by:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT team_id, team_name, city FROM teams ORDER BY team_id;</pre>
+      </div>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>team_id</th>
+              <th>team_name</th>
+              <th>city</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td class="name">Real Madrid</td>
+              <td>Madrid</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td class="name">FC Barcelona</td>
+              <td>Barcelona</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td class="name">Atlético de Madrid</td>
+              <td>Madrid</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td class="name">Athletic Club</td>
+              <td>Bilbao</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td class="name">Sevilla FC</td>
+              <td>Sevilla</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td class="name">Real Sociedad</td>
+              <td>San Sebastián</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>And the players table drops the club's details. It keeps only a <b>number</b> that says which club they
+        belong to:</p>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>player_id</th>
+              <th>player_name</th>
+              <th>position</th>
+              <th>team_id</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td class="name">Thibaut Courtois</td>
+              <td>Goalkeeper</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td class="name">Éder Militão</td>
+              <td>Defender</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td class="name">Jude Bellingham</td>
+              <td>Midfielder</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td class="name">Vinícius Júnior</td>
+              <td>Forward</td>
+              <td>1</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td class="name">Marc-André ter Stegen</td>
+              <td>Goalkeeper</td>
+              <td>2</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="key-diagram">
+        <div class="key-table">
+          <div class="cap">teams</div>
+          <div class="row"><span>team_id</span><b>1</b></div>
+          <div class="row"><span>team_name</span><span>Real Madrid</span></div>
+          <div class="row"><span>city</span><span>Madrid</span></div>
+        </div>
+        <div class="key-arrow">
+          <span class="big">⟵</span>
+          match on<br><b>team_id</b>
+          <span class="big">⟶</span>
+        </div>
+        <div class="key-table">
+          <div class="cap">players</div>
+          <div class="row"><span>player_name</span><span>Courtois</span></div>
+          <div class="row"><span>team_id</span><b>1</b></div>
+        </div>
+      </div>
+
+      <div class="callout key">
+        <h4>🔑 The join key</h4>
+        <p><code>players.team_id</code> holds the same numbers as <code>teams.team_id</code>. That shared column is
+          called the <b>join key</b> — it ties the two tables together. Without it, nothing connects them.</p>
+      </div>
+    </section>
+
+    <!-- ============ PART 3 ============ -->
+    <section class="part" id="part3">
+      <h2><span class="part-num">3</span> Put it back together with a JOIN</h2>
+      <p class="part-sub">The split is only worth it if you can rebuild the full picture on demand. That is what JOIN
+        does.</p>
+
+      <p>You want player names <i>and</i> club names in one result — but they live in different tables. Ask for both,
+        and tell the database how the tables are linked:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT p.player_name, t.team_name
+FROM players AS p
+JOIN teams   AS t ON t.team_id = p.team_id;</pre>
+      </div>
+
+      <p><code>p</code> and <code>t</code> are just short nicknames for the two tables. The <code>ON</code> line is the
+        link: for each player, find the club whose <code>team_id</code> matches that player's <code>team_id</code>.</p>
+
+      <p>Add a few more columns and you have rebuilt the flat table — except each fact is still stored only once:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT p.player_name, p.position, t.team_name, t.city
+FROM players p
+JOIN teams t ON t.team_id = p.team_id
+ORDER BY p.player_id
+LIMIT 8;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out">      player_name      |  position  |  team_name   |   city    
+-----------------------+------------+--------------+-----------
+ Thibaut Courtois      | Goalkeeper | Real Madrid  | Madrid
+ Éder Militão          | Defender   | Real Madrid  | Madrid
+ Jude Bellingham       | Midfielder | Real Madrid  | Madrid
+ Vinícius Júnior       | Forward    | Real Madrid  | Madrid
+ Marc-André ter Stegen | Goalkeeper | FC Barcelona | Barcelona
+ Ronald Araújo         | Defender   | FC Barcelona | Barcelona
+ Pedri                 | Midfielder | FC Barcelona | Barcelona
+ Robert Lewandowski    | Forward    | FC Barcelona | Barcelona
+(8 rows)</pre>
+      </div>
+
+      <div class="callout key">
+        <h4>💡 A correct join never changes the count</h4>
+        <p>The full join returns <b>24</b> rows — the same 24 players you started with, each with the right club
+          attached.</p>
+      </div>
+    </section>
+
+    <!-- ============ TRAPS ============ -->
+    <section class="part" id="traps">
+      <h2><span class="part-num">!</span> The two ways a join goes wrong</h2>
+      <p class="part-sub">Learn these now and you will spot your own bugs in seconds.</p>
+
+      <h3>Trap 1 — no link at all (the accidental 144)</h3>
+      <p>If you list two tables but never say how they match, PostgreSQL pairs <b>every player with every club</b>.
+        It does not warn you:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) FROM players, teams;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out"> count 
+-------
+   144
+(1 row)</pre>
+      </div>
+      <div class="callout trap">
+        <h4>⚠ Where does 144 come from?</h4>
+        <p>24 players × 6 clubs = 144. Every player is glued to every club, so the answer is nonsense — and it is
+          6× too big. If a join gives you a suspiciously large number, look for a missing <code>ON</code>.</p>
+      </div>
+
+      <p>With the modern <code>JOIN</code> syntax, PostgreSQL refuses to run a join with no link, so that mistake
+        announces itself:</p>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out err">ERROR:  syntax error at or near ";"
+LINE 1: SELECT COUNT(*) FROM players JOIN teams;
+                                               ^</pre>
+      </div>
+      <p>The old comma style is the dangerous one — it runs happily and quietly hands you 144 rows.</p>
+
+      <h3>Trap 2 — the wrong link (a plausible wrong answer)</h3>
+      <p>Matching the wrong columns runs perfectly and gives you a number that <i>looks</i> fine. Here we accidentally
+        match the club's id to the <b>player's</b> id:</p>
+      <div class="block">
+        <div class="block-label">SQL — note the mistake</div>
+        <pre class="sql">SELECT p.player_name, t.team_name
+FROM players p
+JOIN teams t ON t.team_id = p.player_id;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Result</div>
+        <pre class="out">      player_name      |     team_name      
+-----------------------+--------------------
+ Thibaut Courtois      | Real Madrid
+ Éder Militão          | FC Barcelona
+ Jude Bellingham       | Atlético de Madrid
+ Vinícius Júnior       | Athletic Club
+ Marc-André ter Stegen | Sevilla FC
+ Ronald Araújo         | Real Sociedad
+(6 rows)</pre>
+      </div>
+      <div class="callout trap">
+        <h4>⚠ No error, wrong answer</h4>
+        <p>Militão plays for Real Madrid, not Barcelona. Because player 2's id happens to equal Barcelona's id, the
+          query invented a pairing. <b>The database cannot know which columns you meant</b> — only you do. Always
+          check the <code>ON</code> line: it should match <code>team_id</code> to <code>team_id</code>.</p>
+      </div>
+
+    </section>
+
+    <!-- ============ PRACTICE ============ -->
+    <section class="part" id="practice">
+      <h2><span class="part-num">✎</span> Practice</h2>
+      <p class="part-sub">Run each query in psql, then type the number it returns. Your answers are saved as you type.
+      </p>
+
+      <div class="toolbar">
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Progress</span>
+            <span id="progressText">0 of 4 answered</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+        <button class="btn-check" id="checkBtn">Check Answers</button>
+        <button class="btn-clear" id="clearBtn">Clear All</button>
+      </div>
+
+      <div class="score" id="scoreBanner" role="status" aria-live="polite">
+        <h3>Your Score</h3>
+        <p><span class="big" id="scoreBig">0 / 4</span> &nbsp;<span id="scoreMsg"></span></p>
+      </div>
+
+      <div id="questions"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="foot-card">
+      <h3>Recap — the one thing to remember</h3>
+      <p style="margin-top:0">A <code>JOIN</code> needs two things: <b>which</b> tables, and <b>how</b> they match.
+        The matching column is the join key — here, <code>team_id</code> on both sides.</p>
+      <p style="margin-bottom:0">Storing each fact once keeps your data correct; the join puts it back together
+        whenever you need the full picture. Reset the data any time with
+        <code>psql -U postgres -d laliga -f laliga.sql</code>.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ====== Practice questions ====== */
+      var QUESTIONS = [
+        {
+          n: 1, concept: "COUNT(DISTINCT …)",
+          text: "How many different clubs are stored in players_flat, even though the club name is repeated on every player row?",
+          answer: 6,
+          hint: "COUNT(DISTINCT team_name) counts each club once, no matter how many times the name repeats.",
+          sql: "SELECT COUNT(DISTINCT team_name) FROM players_flat;",
+          note: "24 rows, but only 6 real clubs. That gap is the repetition the split removes."
+        },
+        {
+          n: 2, concept: "JOIN",
+          text: "Using the two split tables, how many rows does this return?  SELECT COUNT(*) FROM players p JOIN teams t ON t.team_id = p.team_id;",
+          answer: 24,
+          hint: "A correct join does not duplicate anything — it should give you one row per player, the same count as the players table.",
+          sql: "SELECT COUNT(*) FROM players p JOIN teams t ON t.team_id = p.team_id;",
+          note: "If you got 144, you probably joined without matching the key properly."
+        },
+        {
+          n: 3, concept: "JOIN + WHERE",
+          text: "How many players play for a club from Madrid? (Remember: two Madrid clubs are in the data.)",
+          answer: 8,
+          hint: "Join the tables, then filter on the city — which lives in the teams table, so it needs the t. alias.",
+          sql: "SELECT COUNT(*)\nFROM players p\nJOIN teams t ON t.team_id = p.team_id\nWHERE t.city = 'Madrid';",
+          note: "Real Madrid and Atlético de Madrid, four players each. Once the tables are joined, WHERE can test columns from either one."
+        },
+        {
+          n: 4, concept: "the two-table trap",
+          text: "If you list both tables with no ON link — SELECT COUNT(*) FROM players, teams; — how many rows come back?",
+          answer: 144,
+          hint: "Every player is paired with every club. Multiply the number of players by the number of clubs.",
+          sql: "SELECT COUNT(*) FROM players, teams;",
+          note: "24 × 6 = 144. This is the accidental cross join — the reason a missing ON clause is so costly."
+        }
+      ];
+
+      var STORAGE_KEY = "laligaJoins.v2";
+      var TOTAL = QUESTIONS.length;
+
+      /* ====== Storage (safe on file://) ====== */
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (e) { /* storage unavailable — page still works */ }
+      }
+
+      var state = loadState();
+      state.answers = state.answers || {};
+      state.hints = state.hints || {};
+      state.revealed = state.revealed || {};
+
+      function persist() { saveState(); }
+
+      /* ====== Build the practice cards ====== */
+      var container = document.getElementById("questions");
+
+      function esc(s) {
+        return String(s).replace(/[&<>"]/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+      }
+
+      var html = "";
+      QUESTIONS.forEach(function (q) {
+        html += '<section class="q" id="q' + q.n + '" data-n="' + q.n + '">';
+        html += '<div class="q-head">';
+        html += '<div class="q-num">' + q.n + '</div>';
+        html += '<span class="concept">' + esc(q.concept) + '</span>';
+        html += '</div>';
+        html += '<p class="q-text">' + esc(q.text) + '</p>';
+        html += '<div class="answer-row">';
+        html += '<label for="ans' + q.n + '">Your answer:</label>';
+        html += '<input type="text" inputmode="numeric" autocomplete="off" class="ans" id="ans' + q.n + '" data-n="' + q.n + '" placeholder="type a number" aria-label="Answer for question ' + q.n + '">';
+        html += '<span class="result-icon" id="icon' + q.n + '" aria-hidden="true"></span>';
+        html += '</div>';
+        html += '<div class="q-actions">';
+        html += '<button type="button" class="hint-btn" data-n="' + q.n + '">&#128161; Hint</button>';
+        html += '<button type="button" class="reveal-btn" data-n="' + q.n + '">&#128065; Reveal Answer</button>';
+        html += '</div>';
+        html += '<div class="hint" id="hint' + q.n + '"><b>Hint:</b> ' + esc(q.hint) + '</div>';
+        html += '<div class="reveal" id="reveal' + q.n + '">';
+        html += '<div class="ans-line">Answer: ' + q.answer + '</div>';
+        html += '<pre class="sql">' + esc(q.sql) + '</pre>';
+        if (q.note) { html += '<div class="note">' + esc(q.note) + '</div>'; }
+        html += '</div>';
+        html += '</section>';
+      });
+      container.innerHTML = html;
+
+      var inputs = {};
+      QUESTIONS.forEach(function (q) { inputs[q.n] = document.getElementById("ans" + q.n); });
+
+      var progressText = document.getElementById("progressText");
+      var progressFill = document.getElementById("progressFill");
+      var scoreBanner = document.getElementById("scoreBanner");
+      var scoreBig = document.getElementById("scoreBig");
+      var scoreMsg = document.getElementById("scoreMsg");
+
+      /* ====== Restore saved state ====== */
+      QUESTIONS.forEach(function (q) {
+        var n = q.n;
+        if (state.answers[n] !== undefined) {
+          inputs[n].value = state.answers[n];
+        }
+        if (state.hints[n]) {
+          document.getElementById("hint" + n).classList.add("open");
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.add("active");
+        }
+        if (state.revealed[n]) {
+          document.getElementById("reveal" + n).classList.add("open");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.add("active");
+        }
+      });
+
+      /* ====== Normalise + grade ====== */
+      function normalise(val) {
+        if (val === undefined || val === null) return "";
+        return String(val).replace(/,/g, "").replace(/\s/g, "").replace(/^\$/, "").trim();
+      }
+      function isCorrect(n, val) {
+        var v = normalise(val);
+        if (v === "") return false;
+        var num = Number(v);
+        if (isNaN(num)) return false;
+        return Math.abs(num - QUESTIONS[n - 1].answer) < 0.0001;
+      }
+
+      /* ====== Progress ====== */
+      function answeredCount() {
+        return QUESTIONS.filter(function (q) {
+          return normalise(inputs[q.n].value) !== "";
+        }).length;
+      }
+      function updateProgress() {
+        var done = answeredCount();
+        progressText.textContent = done + " of " + TOTAL + " answered";
+        progressFill.style.width = (done / TOTAL * 100) + "%";
+      }
+
+      /* ====== Check answers ====== */
+      function checkAnswers() {
+        var correct = 0, answered = 0;
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          var card = document.getElementById("q" + n);
+          var icon = document.getElementById("icon" + n);
+
+          card.classList.remove("correct", "wrong");
+          inputs[n].classList.remove("correct", "wrong");
+          icon.textContent = "";
+          icon.className = "result-icon";
+
+          if (normalise(inputs[n].value) === "") return;
+
+          answered++;
+          if (isCorrect(n, inputs[n].value)) {
+            correct++;
+            card.classList.add("correct");
+            inputs[n].classList.add("correct");
+            icon.textContent = "\u2713";
+            icon.classList.add("ok");
+          } else {
+            card.classList.add("wrong");
+            inputs[n].classList.add("wrong");
+            icon.textContent = "\u2717";
+            icon.classList.add("no");
+          }
+        });
+
+        var pct = Math.round(correct / TOTAL * 100);
+        scoreBig.textContent = correct + " / " + TOTAL + " (" + pct + "%)";
+        if (answered === 0) {
+          scoreMsg.textContent = "Answer a few questions first, then check.";
+        } else if (correct === TOTAL) {
+          scoreMsg.textContent = "Perfect — you understand why the tables are split and how the join rebuilds them.";
+        } else if (pct >= 70) {
+          scoreMsg.textContent = "Good work. Re-read the red ones and check your ON clause.";
+        } else {
+          scoreMsg.textContent = "Worth another pass at Parts 1–3 before moving on.";
+        }
+        scoreBanner.classList.add("show");
+        scoreBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      /* ====== Clear ====== */
+      function clearAll() {
+        if (!confirm("Clear all answers, hints and revealed answers?")) return;
+        state = { answers: {}, hints: {}, revealed: {} };
+        persist();
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          inputs[n].value = "";
+          inputs[n].classList.remove("correct", "wrong");
+          document.getElementById("q" + n).classList.remove("correct", "wrong");
+          document.getElementById("hint" + n).classList.remove("open");
+          document.getElementById("reveal" + n).classList.remove("open");
+          document.getElementById("icon" + n).textContent = "";
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.remove("active");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.remove("active");
+        });
+        scoreBanner.classList.remove("show");
+        updateProgress();
+      }
+
+      /* ====== Events ====== */
+      container.addEventListener("input", function (e) {
+        var t = e.target;
+        if (!t.classList || !t.classList.contains("ans")) return;
+        var n = t.getAttribute("data-n");
+        state.answers[n] = t.value;
+        persist();
+        updateProgress();
+        t.classList.remove("correct", "wrong");
+        document.getElementById("q" + n).classList.remove("correct", "wrong");
+        document.getElementById("icon" + n).textContent = "";
+      });
+
+      container.addEventListener("click", function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        var n;
+
+        if (t.classList.contains("hint-btn")) {
+          n = t.getAttribute("data-n");
+          var hint = document.getElementById("hint" + n);
+          hint.classList.toggle("open");
+          t.classList.toggle("active", hint.classList.contains("open"));
+          state.hints[n] = hint.classList.contains("open");
+          persist();
+        }
+
+        if (t.classList.contains("reveal-btn")) {
+          n = t.getAttribute("data-n");
+          var rev = document.getElementById("reveal" + n);
+          rev.classList.toggle("open");
+          t.classList.toggle("active", rev.classList.contains("open"));
+          state.revealed[n] = rev.classList.contains("open");
+          persist();
+        }
+      });
+
+      document.getElementById("checkBtn").addEventListener("click", checkAnswers);
+      document.getElementById("clearBtn").addEventListener("click", clearAll);
+      window.addEventListener("beforeunload", persist);
+
+      updateProgress();
+    })();
+  </script>
+</body>
+
+</html>

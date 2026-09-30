@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Titanic SQL Challenge — 12 Questions</title>
+  <style>
+    :root {
+      --navy: #0b2545;
+      --deep: #13315c;
+      --teal: #1b6ca8;
+      --sky: #e8f1f8;
+      --gold: #f0b429;
+      --good: #1a7f5a;
+      --good-bg: #e4f5ee;
+      --bad: #b3261e;
+      --bad-bg: #fdecea;
+      --ink: #1d2b3a;
+      --muted: #5b6b7c;
+      --line: #d7e2ec;
+      --card: #ffffff;
+      --bg: #eef3f8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    code,
+    .mono {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+
+    /* ---------- Header ---------- */
+    header.hero {
+      background: linear-gradient(150deg, var(--navy) 0%, var(--deep) 55%, #1b4f7a 100%);
+      color: #fff;
+      padding: 38px 22px 30px;
+      text-align: center;
+      border-bottom: 5px solid var(--gold);
+    }
+
+    header.hero h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.5rem, 4vw, 2.3rem);
+      letter-spacing: .4px;
+    }
+
+    header.hero p {
+      margin: 0 auto;
+      max-width: 640px;
+      color: #cfe0ef;
+      font-size: 1rem;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: rgba(240, 180, 41, .16);
+      border: 1px solid rgba(240, 180, 41, .55);
+      color: var(--gold);
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    /* ---------- Layout ---------- */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 26px 18px 60px;
+    }
+
+    /* ---------- Sticky toolbar ---------- */
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(238, 243, 248, .94);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin: 0 0 22px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .07);
+    }
+
+    .progress-wrap {
+      flex: 1 1 200px;
+      min-width: 180px;
+    }
+
+    .progress-label {
+      font-size: .82rem;
+      color: var(--muted);
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+
+    .progress-track {
+      height: 9px;
+      background: #dbe6f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--teal), var(--gold));
+      border-radius: 999px;
+      transition: width .3s ease;
+    }
+
+    button {
+      font-family: inherit;
+      font-size: .9rem;
+      font-weight: 600;
+      border-radius: 9px;
+      padding: 9px 16px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform .08s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .btn-check {
+      background: var(--navy);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(11, 37, 69, .25);
+    }
+
+    .btn-check:hover {
+      background: var(--deep);
+    }
+
+    .btn-clear {
+      background: #fff;
+      color: var(--muted);
+      border-color: var(--line);
+    }
+
+    .btn-clear:hover {
+      color: var(--bad);
+      border-color: #eebcb8;
+    }
+
+    /* ---------- Floating action layer ---------- */
+    .fab-layer {
+      position: fixed;
+      right: 22px;
+      bottom: 50%;
+      z-index: 60;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .fab-layer .fab {
+      cursor: grab;
+    }
+
+    .fab-layer.dragging,
+    .fab-layer.dragging .fab {
+      cursor: grabbing;
+    }
+
+    .fab {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 14px 22px;
+      font-size: .95rem;
+      border-radius: 999px;
+      background: var(--navy);
+      color: #fff;
+      border: 2px solid rgba(240, 180, 41, .8);
+      box-shadow: 0 8px 22px rgba(11, 37, 69, .35);
+    }
+
+    .fab:hover {
+      background: var(--deep);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 26px rgba(11, 37, 69, .42);
+    }
+
+    .fab:active {
+      transform: translateY(0);
+    }
+
+    /* While dragging, cancel the hover lift so the button tracks the pointer exactly */
+    .fab-layer.dragging .fab,
+    .fab-layer.dragging .fab:hover {
+      transform: none;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .28);
+    }
+
+    /* Grip dots — the visual cue that the button can be dragged */
+    .fab-grip {
+      flex: 0 0 auto;
+      width: 10px;
+      height: 16px;
+      opacity: .5;
+      background-image: radial-gradient(circle, currentColor 1.3px, transparent 1.5px);
+      background-size: 5px 5px;
+      transition: opacity .15s ease;
+    }
+
+    .fab:hover .fab-grip,
+    .fab-layer.dragging .fab-grip {
+      opacity: .95;
+    }
+
+    .fab-chip {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      border-radius: 999px;
+      padding: 7px 15px;
+      font-size: .86rem;
+      font-weight: 700;
+      color: var(--navy);
+      box-shadow: 0 6px 18px rgba(11, 37, 69, .16);
+    }
+
+    .fab-chip.show {
+      display: inline-flex;
+    }
+
+    .fab-chip.perfect {
+      border-left-color: var(--good);
+      color: var(--good);
+    }
+
+    /* ---------- Score banner ---------- */
+    .score {
+      display: none;
+      margin: 0 0 22px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+    }
+
+    .score.show {
+      display: block;
+    }
+
+    .score h2 {
+      margin: 0 0 4px;
+      font-size: 1.15rem;
+    }
+
+    .score p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .score .big {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+
+    /* ---------- Schema panel ---------- */
+    details.schema {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 22px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+      overflow: hidden;
+    }
+
+    details.schema>summary {
+      cursor: pointer;
+      padding: 15px 18px;
+      font-weight: 700;
+      color: var(--navy);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    details.schema>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    details.schema>summary::before {
+      content: "▸";
+      color: var(--teal);
+      font-size: 1.05rem;
+      transition: transform .15s ease;
+    }
+
+    details.schema[open]>summary::before {
+      transform: rotate(90deg);
+    }
+
+    .schema-body {
+      padding: 0 18px 18px;
+    }
+
+    .schema-note {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: .88rem;
+      color: var(--deep);
+      margin: 0 0 16px;
+    }
+
+    .schema-body h2 {
+      font-size: 1rem;
+      color: var(--navy);
+      margin: 20px 0 10px;
+      padding-top: 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px 22px;
+      align-items: start;
+    }
+
+    .grid2 pre.code {
+      margin: 0 0 10px;
+      background: #0b2545;
+      color: #a8e6cf;
+      padding: 10px 13px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: .82rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .grid2 pre.code code {
+      font-family: inherit;
+      color: inherit;
+      background: none;
+      padding: 0;
+    }
+
+    .tables {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .table-card {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      overflow: hidden;
+    }
+
+    .table-card h3 {
+      margin: 0;
+      padding: 9px 13px;
+      background: var(--navy);
+      color: #fff;
+      font-size: .92rem;
+      letter-spacing: .5px;
+    }
+
+    .table-card h3 span {
+      float: right;
+      font-weight: 500;
+      color: #9fc0dd;
+      font-size: .78rem;
+    }
+
+    table.cols {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .84rem;
+    }
+
+    table.cols td {
+      padding: 6px 13px;
+      border-top: 1px solid #eef3f8;
+      vertical-align: top;
+    }
+
+    table.cols tr:first-child td {
+      border-top: none;
+    }
+
+    table.cols td:first-child {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      color: var(--deep);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    table.cols td:last-child {
+      color: var(--muted);
+    }
+
+    /* ---------- Question cards ---------- */
+    .q {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--teal);
+      border-radius: 14px;
+      padding: 20px 20px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+      transition: border-left-color .2s ease, box-shadow .2s ease;
+    }
+
+    .q.correct {
+      border-left-color: var(--good);
+    }
+
+    .q.wrong {
+      border-left-color: var(--bad);
+    }
+
+    .q-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 11px;
+    }
+
+    .q-num {
+      width: 31px;
+      height: 31px;
+      flex: 0 0 31px;
+      border-radius: 50%;
+      background: var(--navy);
+      color: #fff;
+      font-weight: 800;
+      font-size: .9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .badge {
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+
+    .b-easy {
+      background: var(--good-bg);
+      color: var(--good);
+    }
+
+    .b-medium {
+      background: #fff4d9;
+      color: #8a5a00;
+    }
+
+    .b-hard {
+      background: var(--bad-bg);
+      color: var(--bad);
+    }
+
+    .b-join {
+      background: #e7ecff;
+      color: #2b3f96;
+    }
+
+    .concept {
+      margin-left: auto;
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .6px;
+      color: var(--teal);
+      background: var(--sky);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-family: "SFMono-Regular", Consolas, monospace;
+    }
+
+    .q-text {
+      font-size: 1.06rem;
+      margin: 0 0 14px;
+      font-weight: 600;
+      color: var(--deep);
+    }
+
+    .answer-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .answer-row label {
+      font-size: .86rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input[type="text"].ans {
+      width: 150px;
+      padding: 9px 12px;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 2px solid var(--line);
+      border-radius: 9px;
+      background: #fbfdff;
+      transition: border-color .15s ease, background .15s ease;
+    }
+
+    input[type="text"].ans:focus {
+      outline: none;
+      border-color: var(--teal);
+      background: #fff;
+    }
+
+    input.ans.correct {
+      border-color: var(--good);
+      background: var(--good-bg);
+    }
+
+    input.ans.wrong {
+      border-color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    .result-icon {
+      font-weight: 800;
+      font-size: 1.05rem;
+    }
+
+    .result-icon.ok {
+      color: var(--good);
+    }
+
+    .result-icon.no {
+      color: var(--bad);
+    }
+
+    .q-actions {
+      margin-top: 13px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .q-actions button {
+      font-size: .8rem;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--deep);
+    }
+
+    .q-actions button:hover {
+      background: var(--sky);
+      border-color: #b9cfe2;
+    }
+
+    .q-actions button.active {
+      background: var(--sky);
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
+    .hint,
+    .reveal {
+      display: none;
+      margin-top: 12px;
+      padding: 12px 15px;
+      border-radius: 10px;
+      font-size: .9rem;
+    }
+
+    .hint.open,
+    .reveal.open {
+      display: block;
+    }
+
+    .hint {
+      background: #fff9e9;
+      border-left: 4px solid var(--gold);
+      color: #6b4b00;
+    }
+
+    .reveal {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      color: var(--deep);
+    }
+
+    .reveal .ans-line {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--navy);
+      margin-bottom: 7px;
+    }
+
+    .reveal pre {
+      margin: 0;
+      background: #0b2545;
+      color: #a8e6cf;
+      padding: 11px 13px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: .83rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .reveal .note {
+      margin-top: 9px;
+      font-size: .84rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 18px 110px;
+      color: var(--muted);
+      font-size: .85rem;
+    }
+
+    footer .foot-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px 18px;
+    }
+
+    footer h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: .95rem;
+    }
+
+    footer pre {
+      margin: 0 0 8px;
+      background: #0b2545;
+      color: #a8e6cf;
+      padding: 10px 13px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: .82rem;
+    }
+
+    .kbd {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      padding: 1px 6px;
+      font-size: .8rem;
+      font-family: inherit;
+      color: var(--deep);
+    }
+
+    @media (max-width:520px) {
+      .concept {
+        margin-left: 0;
+      }
+
+      .answer-row {
+        width: 100%;
+      }
+
+      input[type="text"].ans {
+        flex: 1 1 120px;
+        width: auto;
+      }
+
+      .fab-layer {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .fab {
+        padding: 12px 18px;
+        font-size: .9rem;
+      }
+    }
+
+    .hero-lockup {
+      display: grid;
+      grid-template-columns: 1fr;
+      /* place-content: stretch; */
+      place-items: center;
+
+
+      img {
+        min-width: 100px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="hero">
+    <div class="hero-tag">PostgreSQL &amp; psql Practice</div>
+    <div class="hero-lockup">
+      <img src="./titanic.svg" alt="">
+      <h1>The Titanic SQL Challenge</h1>
+
+    </div>
+
+    <p>Twelve data mining questions about the SS Titanic. Work them out in <code>psql</code>, then type your answers
+      here. Answers save locally - i.e. you can refresh the page....</p>
+  </header>
+
+  <main>
+
+    <!-- Sticky progress + controls -->
+    <div class="toolbar">
+      <div class="progress-wrap">
+        <div class="progress-label">
+          <span>Progress</span>
+          <span id="progressText">0 of 12 answered</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+      <button class="btn-check" id="checkBtn">Check Answers</button>
+      <button class="btn-clear" id="clearBtn">Clear All</button>
+    </div>
+
+    <!-- Score banner -->
+    <div class="score" id="scoreBanner" role="status" aria-live="polite">
+      <h2>Your Score</h2>
+      <p><span class="big" id="scoreBig">0 / 12</span> &nbsp;<span id="scoreMsg"></span></p>
+    </div>
+
+    <!-- Schema reference -->
+    <details class="schema" open>
+      <summary>Database Schema Cheat Sheet (click to open/close)</summary>
+      <div class="schema-body">
+        <p class="schema-note">
+          Two tables. Every passenger has a <code>portId</code> that points at a row in <code>ports</code> — that link
+          is what you join on.
+          A value of <code>1</code> in <code>survived</code> means the passenger lived; <code>0</code> means they died.
+          The <code>age</code> and <code>cabin</code> columns can be <code>NULL</code> (missing).
+        </p>
+
+
+
+
+
+        <h2>Before you start</h2>
+        <div class="grid2">
+          <div>
+            <p style="margin:0 0 6px;font-size:.9rem">Load the dataset into PostgreSQL using psql:</p>
+            <pre class="code"><code>CREATE DATABASE titanic;</code></pre>
+            <pre class="code"><code>\i titanic.sql</code></pre>
+            <pre class="code"><code>\r clears the terminal buffer- sometimes needs resetting.</code></pre>
+            <pre class="code"><code>Supress annoying log messages: SET client_min_messages = 'warning'; </code></pre>
+
+
+          </div>
+          <div>
+
+
+
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <!-- Questions are generated by JavaScript -->
+    <div id="questions"></div>
+
+  </main>
+
+  <footer>
+    <div class="foot-card">
+      <h3>Using psql</h3>
+      <p>Open a terminal and connect to the database, then run your queries:</p>
+      <pre>psql -U postgres -d sqltitanic</pre>
+      <p>Handy psql commands: <code>\dt</code> lists tables, <code>\d passengers</code> describes a table,
+        <code>\x</code> toggles wide output, <code>\q</code> quits.
+      </p>
+      <p style="margin-bottom:0;">Typing a query that ends without a semicolon will wait for more input — finish with
+        <code>;</code> and press <span class="kbd">Enter</span>.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Floating action layer: stays in view no matter where you scroll -->
+  <div class="fab-layer">
+    <div class="fab-chip" id="fabChip" role="status" aria-live="polite"></div>
+    <button type="button" class="btn-check fab" id="checkBtnFab" aria-label="Check answers"
+      title="Click to check answers — drag to move"><span class="fab-grip" aria-hidden="true"></span>Check
+      Answers</button>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ====== Question bank: easy → hard, joins last ====== */
+      var QUESTIONS = [
+        {
+          n: 1, level: "Easy", concept: "COUNT(*)",
+          text: "How many passengers are listed in the passengers table?",
+          answer: 891,
+          hint: "COUNT(*) counts every row in a table — no filtering needed.",
+          sql: "SELECT COUNT(*) FROM passengers;"
+        },
+        {
+          n: 2, level: "Easy", concept: "WHERE",
+          text: "How many passengers survived the sinking?",
+          answer: 342,
+          hint: "The survived column holds 1 for survivors and 0 for those who died. Filter for the value 1.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE survived = 1;"
+        },
+        {
+          n: 3, level: "Easy", concept: "WHERE + text",
+          text: "How many passengers were female?",
+          answer: 314,
+          hint: "Text values go in single quotes: 'female'. Compare the sex column to it.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE sex = 'female';"
+        },
+        {
+          n: 4, level: "Easy", concept: "WHERE + <",
+          text: "How many children under the age of 5 were on board?",
+          answer: 40,
+          hint: "Use a less-than comparison on the age column. \"Under 5\" means age is less than 5.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE age < 5;"
+        },
+        {
+          n: 5, level: "Medium", concept: "AND",
+          text: "How many female passengers survived?",
+          answer: 233,
+          hint: "Two conditions at once — join them with AND so both must be true.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE sex = 'female'\n  AND survived = 1;"
+        },
+        {
+          n: 6, level: "Medium", concept: "WHERE",
+          text: "How many passengers travelled in 3rd class?",
+          answer: 491,
+          hint: "Ticket class is stored in pclass, which is 1, 2, or 3.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE pclass = 3;"
+        },
+        {
+          n: 7, level: "Medium", concept: "AND",
+          text: "How many 1st class passengers survived?",
+          answer: 136,
+          hint: "Filter on pclass = 1 AND survived = 1.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE pclass = 1\n  AND survived = 1;"
+        },
+        {
+          n: 8, level: "Medium", concept: "IS NULL",
+          text: "How many passengers have no age recorded?",
+          answer: 177,
+          hint: "Missing values are NULL. You cannot write = NULL — use IS NULL instead.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE age IS NULL;"
+        },
+        {
+          n: 9, level: "Hard", concept: "AND",
+          text: "How many male passengers died?",
+          answer: 468,
+          hint: "\"Died\" is the opposite of survived, so you want survived = 0 combined with sex = 'male'.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE sex = 'male'\n  AND survived = 0;"
+        },
+        {
+          n: 10, level: "Hard", concept: "AND (two columns)",
+          text: "How many passengers travelled completely alone — with no siblings or spouse AND no parents or children aboard?",
+          answer: 537,
+          hint: "Two different columns must both be 0: sibsp and parch. Combine them with AND.",
+          sql: "SELECT COUNT(*) FROM passengers\nWHERE sibsp = 0\n  AND parch = 0;"
+        },
+        {
+          n: 11, level: "Hard", concept: "JOIN", join: true,
+          text: "How many passengers boarded at Cherbourg?",
+          answer: 168,
+          hint: "The city name lives in the ports table, but who boarded where lives in passengers. Join them on ports.id = passengers.portId, then filter for the city.",
+          sql: "SELECT COUNT(*)\nFROM passengers p\nJOIN ports pt ON pt.id = p.portId\nWHERE pt.city = 'Cherbourg';",
+          note: "Why a JOIN? The passengers table only stores portId (a number), not the city name. The JOIN looks up the matching row in ports so you can compare against the readable city name."
+        },
+        {
+          n: 12, level: "Hard", concept: "JOIN + AND", join: true,
+          text: "How many passengers who boarded at Southampton survived?",
+          answer: 217,
+          hint: "Same JOIN as the last question, plus a second condition on survived. Remember the alias for the passengers table.",
+          sql: "SELECT COUNT(*)\nFROM passengers p\nJOIN ports pt ON pt.id = p.portId\nWHERE pt.city = 'Southampton'\n  AND p.survived = 1;",
+          note: "Fun fact: 2 passengers have a NULL portId, so an INNER JOIN returns 889 rows, not 891. Use a LEFT JOIN if you ever need to keep every passenger."
+        }
+      ];
+
+      var STORAGE_KEY = "titanicQuiz.v1";
+      var TOTAL = QUESTIONS.length;
+
+      /* ====== Storage helpers (safe on file://) ====== */
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (e) { /* storage unavailable — page still works, just won't persist */ }
+      }
+
+      var state = loadState();
+      state.answers = state.answers || {};
+      state.hints = state.hints || {};
+      state.revealed = state.revealed || {};
+
+      function persist() { saveState(); }
+
+      /* ====== Build the DOM ====== */
+      var container = document.getElementById("questions");
+
+      function esc(s) {
+        return String(s).replace(/[&<>"]/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+      }
+
+      function levelClass(level) {
+        return level === "Easy" ? "b-easy" : (level === "Medium" ? "b-medium" : "b-hard");
+      }
+
+      var html = "";
+      QUESTIONS.forEach(function (q) {
+        html += '<section class="q" id="q' + q.n + '" data-n="' + q.n + '">';
+        html += '<div class="q-head">';
+        html += '<div class="q-num">' + q.n + '</div>';
+        html += '<span class="badge ' + levelClass(q.level) + '">' + q.level + '</span>';
+        if (q.join) { html += '<span class="badge b-join">Table Join</span>'; }
+        html += '<span class="concept">' + esc(q.concept) + '</span>';
+        html += '</div>';
+        html += '<p class="q-text">' + esc(q.text) + '</p>';
+        html += '<div class="answer-row">';
+        html += '<label for="ans' + q.n + '">Your answer:</label>';
+        html += '<input type="text" inputmode="numeric" autocomplete="off" class="ans" id="ans' + q.n + '" data-n="' + q.n + '" placeholder="type a number" aria-label="Answer for question ' + q.n + '">';
+        html += '<span class="result-icon" id="icon' + q.n + '" aria-hidden="true"></span>';
+        html += '</div>';
+        html += '<div class="q-actions">';
+        html += '<button type="button" class="hint-btn" data-n="' + q.n + '">&#128161; Hint</button>';
+        html += '<button type="button" class="reveal-btn" data-n="' + q.n + '">&#128065; Reveal Answer</button>';
+        html += '</div>';
+        html += '<div class="hint" id="hint' + q.n + '"><b>Hint:</b> ' + esc(q.hint) + '</div>';
+        html += '<div class="reveal" id="reveal' + q.n + '">';
+        html += '<div class="ans-line">Answer: ' + q.answer + '</div>';
+        html += '<pre>' + esc(q.sql) + '</pre>';
+        if (q.note) { html += '<div class="note">' + esc(q.note) + '</div>'; }
+        html += '</div>';
+        html += '</section>';
+      });
+      container.innerHTML = html;
+
+      /* ====== Element lookups ====== */
+      var inputs = {};
+      QUESTIONS.forEach(function (q) { inputs[q.n] = document.getElementById("ans" + q.n); });
+
+      var progressText = document.getElementById("progressText");
+      var progressFill = document.getElementById("progressFill");
+      var scoreBanner = document.getElementById("scoreBanner");
+      var scoreBig = document.getElementById("scoreBig");
+      var scoreMsg = document.getElementById("scoreMsg");
+      var fabChip = document.getElementById("fabChip");
+
+      /* ====== Restore saved state into the page ====== */
+      QUESTIONS.forEach(function (q) {
+        var n = q.n;
+        if (state.answers[n] !== undefined) {
+          inputs[n].value = state.answers[n];
+        }
+        if (state.hints[n]) {
+          document.getElementById("hint" + n).classList.add("open");
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.add("active");
+        }
+        if (state.revealed[n]) {
+          document.getElementById("reveal" + n).classList.add("open");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.add("active");
+        }
+      });
+
+      /* ====== Normalise + grade ====== */
+      function normalise(val) {
+        if (val === undefined || val === null) return "";
+        return String(val)
+          .replace(/,/g, "")      // allow 1,234
+          .replace(/\s/g, "")
+          .replace(/^\$/, "")
+          .trim();
+      }
+      function isCorrect(n, val) {
+        var v = normalise(val);
+        if (v === "") return false;
+        var num = Number(v);
+        if (isNaN(num)) return false;
+        var answer = QUESTIONS[n - 1].answer;
+        return Math.abs(num - answer) < 0.0001;
+      }
+
+      /* ====== Progress ====== */
+      function answeredCount() {
+        return QUESTIONS.filter(function (q) {
+          return normalise(inputs[q.n].value) !== "";
+        }).length;
+      }
+      function updateProgress() {
+        var done = answeredCount();
+        progressText.textContent = done + " of " + TOTAL + " answered";
+        progressFill.style.width = (done / TOTAL * 100) + "%";
+      }
+
+      /* ====== Check answers ====== */
+      function checkAnswers(scrollToScore) {
+        var correct = 0, answered = 0;
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          var card = document.getElementById("q" + n);
+          var icon = document.getElementById("icon" + n);
+          var val = inputs[n].value;
+
+          card.classList.remove("correct", "wrong");
+          inputs[n].classList.remove("correct", "wrong");
+          icon.textContent = "";
+          icon.className = "result-icon";
+
+          if (normalise(val) === "") return;   // leave unanswered blank
+
+          answered++;
+          if (isCorrect(n, val)) {
+            correct++;
+            card.classList.add("correct");
+            inputs[n].classList.add("correct");
+            icon.textContent = "\u2713";
+            icon.classList.add("ok");
+          } else {
+            card.classList.add("wrong");
+            inputs[n].classList.add("wrong");
+            icon.textContent = "\u2717";
+            icon.classList.add("no");
+          }
+        });
+
+        var pct = Math.round(correct / TOTAL * 100);
+        scoreBig.textContent = correct + " / " + TOTAL + " (" + pct + "%)";
+        var msg;
+        if (answered === 0) {
+          msg = "Answer some questions first, then check again!";
+        } else if (correct === TOTAL) {
+          msg = "Perfect score — you've mastered this dataset! \uD83C\uDF89";
+        } else if (pct >= 75) {
+          msg = "Great work! Review the red ones and try again.";
+        } else if (pct >= 50) {
+          msg = "Good progress. Use the hints on the ones you missed.";
+        } else {
+          msg = "Keep going — open the hints and check the schema cheat sheet.";
+        }
+        scoreMsg.textContent = msg;
+        scoreBanner.classList.add("show");
+        if (scrollToScore !== false) {
+          scoreBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+
+        // Compact result in the floating layer, so feedback appears even
+        // when the score banner up top is out of view.
+        if (fabChip) {
+          if (answered === 0) {
+            fabChip.textContent = "Nothing to check yet";
+            fabChip.classList.remove("perfect");
+          } else {
+            fabChip.textContent = correct + " / " + TOTAL + " correct";
+            fabChip.classList.toggle("perfect", correct === TOTAL);
+          }
+          fabChip.classList.add("show");
+        }
+      }
+
+      /* ====== Clear everything ====== */
+      function clearAll() {
+        if (!confirm("Clear all answers, hints and revealed answers? This cannot be undone.")) return;
+        state = { answers: {}, hints: {}, revealed: {} };
+        persist();
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          inputs[n].value = "";
+          inputs[n].classList.remove("correct", "wrong");
+          document.getElementById("q" + n).classList.remove("correct", "wrong");
+          document.getElementById("hint" + n).classList.remove("open");
+          document.getElementById("reveal" + n).classList.remove("open");
+          document.getElementById("icon" + n).textContent = "";
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.remove("active");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.remove("active");
+        });
+        scoreBanner.classList.remove("show");
+        if (fabChip) {
+          fabChip.classList.remove("show", "perfect");
+          fabChip.textContent = "";
+        }
+        updateProgress();
+      }
+
+      /* ====== Event wiring ====== */
+      container.addEventListener("input", function (e) {
+        var t = e.target;
+        if (!t.classList || !t.classList.contains("ans")) return;
+        var n = t.getAttribute("data-n");
+        state.answers[n] = t.value;
+        persist();
+        updateProgress();
+        // typing again clears the previous mark for this question
+        t.classList.remove("correct", "wrong");
+        document.getElementById("q" + n).classList.remove("correct", "wrong");
+        document.getElementById("icon" + n).textContent = "";
+      });
+
+      container.addEventListener("click", function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        var n;
+
+        if (t.classList.contains("hint-btn")) {
+          n = t.getAttribute("data-n");
+          var hint = document.getElementById("hint" + n);
+          hint.classList.toggle("open");
+          t.classList.toggle("active", hint.classList.contains("open"));
+          state.hints[n] = hint.classList.contains("open");
+          persist();
+        }
+
+        if (t.classList.contains("reveal-btn")) {
+          n = t.getAttribute("data-n");
+          var rev = document.getElementById("reveal" + n);
+          rev.classList.toggle("open");
+          t.classList.toggle("active", rev.classList.contains("open"));
+          state.revealed[n] = rev.classList.contains("open");
+          persist();
+        }
+      });
+
+      document.getElementById("checkBtn").addEventListener("click", function () { checkAnswers(true); });
+      document.getElementById("checkBtnFab").addEventListener("click", function () { checkAnswers(false); });
+      document.getElementById("clearBtn").addEventListener("click", clearAll);
+
+      /* ====== Make the floating layer draggable ====== */
+      (function makeFabDraggable() {
+        var layer = document.querySelector(".fab-layer");
+        if (!layer) return;
+
+        var POS_KEY = "titanicQuiz.fabPos.v1";
+        var MARGIN = 10;          // keep this far from the window edges
+        var DRAG_SLOP = 4;        // px of movement before it counts as a drag, not a click
+
+        var dragging = false, moved = false;
+        var startX = 0, startY = 0, startLeft = 0, startBottom = 0;
+
+        function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+        // Anchor on left + bottom so the layer grows UPWARD when the score chip
+        // appears — the button itself never shifts under the user's finger.
+        function place(left, bottom, remember) {
+          var w = layer.offsetWidth, h = layer.offsetHeight;
+          left = clamp(left, MARGIN, Math.max(MARGIN, window.innerWidth - w - MARGIN));
+          bottom = clamp(bottom, MARGIN, Math.max(MARGIN, window.innerHeight - h - MARGIN));
+          layer.style.left = left + "px";
+          layer.style.bottom = bottom + "px";
+          layer.style.right = "auto";
+          layer.style.top = "auto";
+          if (remember) savePos(left, bottom);
+        }
+
+        function savePos(left, bottom) {
+          try { localStorage.setItem(POS_KEY, JSON.stringify({ left: left, bottom: bottom })); }
+          catch (e) { /* storage unavailable — the position just won't persist */ }
+        }
+
+        function loadPos() {
+          try {
+            var p = JSON.parse(localStorage.getItem(POS_KEY) || "null");
+            if (p && isFinite(p.left) && isFinite(p.bottom)) place(p.left, p.bottom, false);
+          } catch (e) { /* ignore a corrupt saved position */ }
+        }
+
+        function onDown(e) {
+          if (e.button !== undefined && e.button !== 0) return;   // left button / touch only
+          var r = layer.getBoundingClientRect();
+          startX = e.clientX;
+          startY = e.clientY;
+          startLeft = r.left;
+          startBottom = window.innerHeight - r.bottom;
+          dragging = true;
+          moved = false;
+          layer.classList.add("dragging");
+          place(startLeft, startBottom, false);   // switch to explicit left/bottom, no jump
+          try { layer.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+        }
+
+        function onMove(e) {
+          if (!dragging) return;
+          var dx = e.clientX - startX, dy = e.clientY - startY;
+          if (!moved && (Math.abs(dx) > DRAG_SLOP || Math.abs(dy) > DRAG_SLOP)) moved = true;
+          if (!moved) return;
+          e.preventDefault();
+          place(startLeft + dx, startBottom - dy, false);
+        }
+
+        function onUp(e) {
+          if (!dragging) return;
+          dragging = false;
+          layer.classList.remove("dragging");
+          try { layer.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+          if (moved) savePos(parseFloat(layer.style.left), parseFloat(layer.style.bottom));
+        }
+
+        layer.addEventListener("pointerdown", onDown);
+        layer.addEventListener("pointermove", onMove);
+        layer.addEventListener("pointerup", onUp);
+        layer.addEventListener("pointercancel", onUp);
+
+        // A real drag must not also trigger the Check Answers click.
+        layer.addEventListener("click", function (e) {
+          if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+        }, true);
+
+        function reclamp(remember) {
+          if (!layer.style.left) return;   // never dragged — still using right/bottom
+          place(parseFloat(layer.style.left), parseFloat(layer.style.bottom), remember);
+        }
+
+        window.addEventListener("resize", function () { reclamp(true); });
+        if (window.ResizeObserver) {
+          // Also fires when the score chip appears and changes the layer's size.
+          new ResizeObserver(function () { reclamp(false); }).observe(layer);
+        }
+
+        loadPos();
+      })();
+
+      // Save when the page is hidden/closed, in case a final keystroke was missed
+      window.addEventListener("beforeunload", persist);
+
+      updateProgress();
+    })();
+  </script>
+</body>
+
+</html>
