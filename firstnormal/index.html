@@ -2,13 +2,1758 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>First and Second Normal Form — La Liga Edition</title>
+  <style>
+    :root {
+      --navy: #0b2545;
+      --deep: #13315c;
+      --teal: #1b6ca8;
+      --sky: #e8f1f8;
+      --gold: #f0b429;
+      --good: #1a7f5a;
+      --good-bg: #e4f5ee;
+      --bad: #b3261e;
+      --bad-bg: #fdecea;
+      --ink: #1d2b3a;
+      --muted: #5b6b7c;
+      --line: #d7e2ec;
+      --card: #ffffff;
+      --bg: #eef3f8;
+      --code-bg: #0b2545;
+      --code-fg: #a8e6cf;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    code {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .88em;
+      background: var(--sky);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--deep);
+    }
+
+    /* ---------- Header ---------- */
+    header.hero {
+      background: linear-gradient(150deg, var(--navy) 0%, var(--deep) 55%, #1b4f7a 100%);
+      color: #fff;
+      padding: 40px 22px 32px;
+      text-align: center;
+      border-bottom: 5px solid var(--gold);
+    }
+
+    header.hero h1 {
+      margin: 0 0 10px;
+      font-size: clamp(1.5rem, 4vw, 2.3rem);
+      letter-spacing: .3px;
+    }
+
+    header.hero p {
+      margin: 0 auto;
+      max-width: 660px;
+      color: #cfe0ef;
+      font-size: 1rem;
+    }
+
+    .hero-tag {
+      display: inline-block;
+      background: rgba(240, 180, 41, .16);
+      border: 1px solid rgba(240, 180, 41, .55);
+      color: var(--gold);
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+
+    /* ---------- Layout ---------- */
+    main {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 24px 18px 60px;
+    }
+
+    nav.toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 26px;
+    }
+
+    nav.toc a {
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: var(--deep);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 14px;
+      transition: background .15s ease, border-color .15s ease;
+    }
+
+    nav.toc a:hover {
+      background: var(--sky);
+      border-color: var(--teal);
+    }
+
+    section.part {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 24px 24px 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 14px rgba(11, 37, 69, .06);
+    }
+
+    section.part>h2 {
+      margin: 0 0 4px;
+      font-size: 1.22rem;
+      color: var(--navy);
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .part-num {
+      flex: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      background: var(--navy);
+      color: #fff;
+      font-size: .92rem;
+      font-weight: 700;
+    }
+
+    .part-sub {
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: .93rem;
+    }
+
+    section.part h3 {
+      margin: 22px 0 8px;
+      font-size: 1rem;
+      color: var(--deep);
+    }
+
+    section.part p {
+      margin: 0 0 12px;
+    }
+
+    ul.objectives {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    ul.objectives li {
+      position: relative;
+      padding: 7px 0 7px 30px;
+      border-bottom: 1px solid #eef3f8;
+    }
+
+    ul.objectives li:last-child {
+      border-bottom: 0;
+    }
+
+    ul.objectives li::before {
+      content: "▸";
+      position: absolute;
+      left: 8px;
+      color: var(--teal);
+      font-weight: 700;
+    }
+
+    /* ---------- Code + output blocks ---------- */
+    .block {
+      margin: 0 0 14px;
+    }
+
+    .block-label {
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    pre.sql {
+      margin: 0;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      padding: 13px 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .84rem;
+      line-height: 1.55;
+      white-space: pre;
+    }
+
+    pre.out {
+      margin: 0;
+      background: #fbfdff;
+      color: var(--deep);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      padding: 12px 15px;
+      border-radius: 10px;
+      overflow-x: auto;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: .82rem;
+      line-height: 1.5;
+      /* psql error messages can be long — wrap them rather than let a
+         projector cut them off mid-sentence */
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    pre.out.err {
+      border-left-color: var(--bad);
+      color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    /* ---------- Data tables ---------- */
+    .scroll-x {
+      overflow-x: auto;
+      margin: 0 0 14px;
+    }
+
+    table.data {
+      border-collapse: collapse;
+      width: 100%;
+      font-size: .82rem;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table.data th {
+      background: var(--navy);
+      color: #fff;
+      text-align: left;
+      padding: 8px 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    table.data td {
+      padding: 7px 11px;
+      border-top: 1px solid #eef3f8;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    table.data td.name {
+      color: var(--deep);
+      font-weight: 600;
+    }
+
+    td.repeat {
+      background: #fff8e6;
+    }
+
+    .repeat-key {
+      font-size: .8rem;
+      color: var(--muted);
+      margin: -6px 0 14px;
+    }
+
+    .swatch {
+      display: inline-block;
+      width: 11px;
+      height: 11px;
+      background: #fff8e6;
+      border: 1px solid #eddca6;
+      border-radius: 3px;
+      vertical-align: -1px;
+      margin-right: 4px;
+    }
+
+    /* ---------- Callouts ---------- */
+    .callout {
+      border-radius: 11px;
+      padding: 14px 16px;
+      margin: 0 0 14px;
+      font-size: .93rem;
+    }
+
+    .callout h4 {
+      margin: 0 0 6px;
+      font-size: .95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .callout p:last-child {
+      margin-bottom: 0;
+    }
+
+    .callout pre.sql {
+      margin: 8px 0;
+    }
+
+    .callout.trap {
+      background: var(--bad-bg);
+      border-left: 4px solid var(--bad);
+      color: #7a1a15;
+    }
+
+    .callout.trap h4 {
+      color: var(--bad);
+    }
+
+    .callout.key {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      color: var(--deep);
+    }
+
+    .callout.key h4 {
+      color: var(--teal);
+    }
+
+    .callout.win {
+      background: var(--good-bg);
+      border-left: 4px solid var(--good);
+      color: #10583e;
+    }
+
+    .callout.win h4 {
+      color: var(--good);
+    }
+
+    .callout.reset {
+      background: #fff9e9;
+      border-left: 4px solid var(--gold);
+      color: #6b4b00;
+    }
+
+    .callout.reset h4 {
+      color: #8a5a00;
+    }
+
+    /* ---------- Split diagram ---------- */
+    .split-map {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: var(--sky);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 0 0 14px;
+    }
+
+    .split-box {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px 12px;
+      min-width: 165px;
+    }
+
+    .split-box .cap {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-weight: 700;
+      color: var(--deep);
+      font-size: .82rem;
+      margin-bottom: 7px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 5px;
+    }
+
+    .split-box .col {
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: .78rem;
+      padding: 2px 0;
+      white-space: nowrap;
+    }
+
+    .split-box .col.player {
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    .split-box .col.club {
+      color: #8a5a00;
+      font-weight: 600;
+    }
+
+    .split-box .col.fk {
+      color: var(--good);
+      font-weight: 600;
+    }
+
+    .split-right {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .split-arrow {
+      font-size: 1.5rem;
+      color: var(--teal);
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .split-key {
+      font-size: .78rem;
+      color: var(--muted);
+      text-align: center;
+      margin: -8px 0 14px;
+    }
+
+    .split-key b.player {
+      color: var(--teal);
+    }
+
+    .split-key b.club {
+      color: #8a5a00;
+    }
+
+    .split-key b.fk {
+      color: var(--good);
+    }
+
+    /* ---------- Practice ---------- */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin: 0 0 16px;
+    }
+
+    .progress-wrap {
+      flex: 1 1 220px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: .76rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    .progress-track {
+      height: 8px;
+      background: var(--sky);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: var(--teal);
+      border-radius: 999px;
+      transition: width .2s ease;
+    }
+
+    button {
+      font: inherit;
+      font-size: .85rem;
+      font-weight: 700;
+      border: 0;
+      border-radius: 9px;
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background .15s ease, transform .06s ease;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button:focus-visible {
+      outline: 3px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .btn-check {
+      background: var(--teal);
+      color: #fff;
+    }
+
+    .btn-check:hover {
+      background: var(--deep);
+    }
+
+    .btn-clear {
+      background: var(--sky);
+      color: var(--deep);
+      border: 1px solid var(--line);
+    }
+
+    .btn-clear:hover {
+      background: #dbe9f4;
+    }
+
+    .score {
+      display: none;
+      background: var(--sky);
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 14px 16px;
+      margin: 0 0 18px;
+    }
+
+    .score.show {
+      display: block;
+    }
+
+    .score h3 {
+      margin: 0 0 4px;
+      font-size: .95rem;
+      color: var(--deep);
+    }
+
+    .score p {
+      margin: 0;
+      font-size: .9rem;
+    }
+
+    .score .big {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .q {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 15px 16px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+
+    .q.correct {
+      border-color: var(--good);
+      background: var(--good-bg);
+    }
+
+    .q.wrong {
+      border-color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    .q-head {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 7px;
+    }
+
+    .q-num {
+      flex: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 7px;
+      background: var(--navy);
+      color: #fff;
+      font-size: .78rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .concept {
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      color: var(--teal);
+      background: var(--sky);
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    .q-text {
+      margin: 0 0 11px;
+      font-size: .92rem;
+    }
+
+    .answer-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .answer-row label {
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    input.ans {
+      font: inherit;
+      font-size: .9rem;
+      width: 150px;
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+    }
+
+    input.ans:focus {
+      outline: 2px solid var(--teal);
+      outline-offset: 1px;
+    }
+
+    input.ans.correct {
+      border-color: var(--good);
+      background: var(--good-bg);
+    }
+
+    input.ans.wrong {
+      border-color: var(--bad);
+      background: var(--bad-bg);
+    }
+
+    .result-icon {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .result-icon.ok {
+      color: var(--good);
+    }
+
+    .result-icon.no {
+      color: var(--bad);
+    }
+
+    .q-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 11px;
+      flex-wrap: wrap;
+    }
+
+    .q-actions button {
+      font-size: .78rem;
+      padding: 6px 12px;
+      background: var(--sky);
+      color: var(--deep);
+      border: 1px solid var(--line);
+    }
+
+    .q-actions button:hover {
+      background: #dbe9f4;
+    }
+
+    .q-actions button.active {
+      background: var(--teal);
+      color: #fff;
+      border-color: var(--teal);
+    }
+
+    .hint,
+    .reveal {
+      display: none;
+      margin-top: 11px;
+      font-size: .86rem;
+      border-radius: 9px;
+      padding: 11px 13px;
+    }
+
+    .hint.open,
+    .reveal.open {
+      display: block;
+    }
+
+    .hint {
+      background: #fff9e9;
+      border-left: 4px solid var(--gold);
+      color: #6b4b00;
+    }
+
+    .reveal {
+      background: var(--sky);
+      border-left: 4px solid var(--teal);
+      color: var(--deep);
+    }
+
+    .reveal .ans-line {
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .reveal pre.sql {
+      margin-bottom: 7px;
+      font-size: .78rem;
+    }
+
+    .reveal .note {
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 0 18px 60px;
+    }
+
+    footer .foot-card {
+      background: var(--navy);
+      color: #dbe9f4;
+      border-radius: 16px;
+      padding: 22px 24px;
+    }
+
+    footer h3 {
+      margin: 0 0 8px;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    footer code {
+      background: rgba(255, 255, 255, .12);
+      color: #a8e6cf;
+    }
+
+    @media (max-width: 640px) {
+      section.part {
+        padding: 18px 16px;
+      }
+
+      .concept {
+        font-size: .64rem;
+      }
+
+      input.ans {
+        width: 120px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
+  <header class="hero">
+    <div class="hero-tag">PostgreSQL &amp; psql · Lesson</div>
+    <h1>First and Second Normal Form</h1>
+    <p>One table, twenty-four players, and the same club details written out again and again. Fix it one rule at a
+      time — without changing a single fact.</p>
+  </header>
+
+  <main>
+
+    <nav class="toc">
+      <a href="#goals">Goals</a>
+      <a href="#setup">Setup</a>
+      <a href="#part1">1 · One big table</a>
+      <a href="#part2">2 · 1NF</a>
+      <a href="#part3">3 · 2NF</a>
+      <a href="#practice">Practice</a>
+    </nav>
+
+    <!-- ============ GOALS ============ -->
+    <section class="part" id="goals">
+      <h2><span class="part-num">✓</span> What you will be able to do</h2>
+      <p class="part-sub">By the end of this page you can:</p>
+      <ul class="objectives">
+        <li>Say what <b>first normal form</b> requires, and name the rule our table breaks.</li>
+        <li>Say what <b>second normal form</b> requires, and decide which columns belong to which table.</li>
+        <li>Split one wide table into two, then prove that no information was lost.</li>
+      </ul>
+    </section>
+
+    <!-- ============ SETUP ============ -->
+    <section class="part" id="setup">
+      <h2><span class="part-num">⚙</span> Setup — load the data</h2>
+      <p class="part-sub">Six Spanish clubs, four players each. Small enough to check by eye.</p>
+      <p>Create the database and load the file. It is safe to run more than once — it rebuilds everything:</p>
+      <div class="block">
+        <div class="block-label">The steps in Terminal</div>
+        <pre class="sql">
+psql -U postgres
+CREATE DATABASE firstnormal;
+\c firstnormal
+\i players.sql
+      </pre>
+      </div>
+      <p>Check you have what you should have — <b>24</b>, <b>24</b>, <b>24</b>, <b>6</b> and <b>6</b>:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) FROM players_flat;
+SELECT COUNT(*) FROM players_1nf;
+SELECT COUNT(*) FROM players_2nf;
+SELECT COUNT(*) FROM teams;
+SELECT COUNT(*) FROM clubs_bad;</pre>
+      </div>
+      <p><b>Load the file with <code>-f</code> or <code>\i</code></b> — some names contain accents
+        (<code>Atlético de Madrid</code>, <code>San Mamés</code>), which can get mangled if you type them straight
+        into a Windows terminal.</p>
+      <p>The file builds <b>the same facts several ways</b>, so you can compare them side by side:
+        <code>players_flat</code> (before), <code>players_1nf</code> (after 1NF),
+        <code>players_2nf</code> + <code>teams</code> (after 2NF) — plus <code>clubs_bad</code>, a deliberate
+        mess used in Part 2.</p>
+    </section>
+
+    <!-- ============ PART 1 ============ -->
+    <section class="part" id="part1">
+      <h2><span class="part-num">1</span> The problem: one big table</h2>
+      <p class="part-sub">The "obvious" design — put everything about a player in one row.</p>
+
+      <p>Here is <code>players_flat</code>. It has one row per player, and carries the club's name, city and
+        stadium along for the ride:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT player_id, player_name, position, team_name, city, stadium
+FROM players_flat
+ORDER BY player_id
+LIMIT 5;</pre>
+      </div>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>player_id</th>
+              <th>player_name</th>
+              <th>position</th>
+              <th>team_name</th>
+              <th>city</th>
+              <th>stadium</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>1</td>
+              <td class="name">Thibaut Courtois</td>
+              <td>Goalkeeper</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td class="name">Éder Militão</td>
+              <td>Defender</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td class="name">Jude Bellingham</td>
+              <td>Midfielder</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td class="name">Vinícius Júnior</td>
+              <td>Forward</td>
+              <td class="repeat">Real Madrid</td>
+              <td class="repeat">Madrid</td>
+              <td class="repeat">Santiago Bernabéu</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td class="name">Marc-André ter Stegen</td>
+              <td>Goalkeeper</td>
+              <td class="repeat">FC Barcelona</td>
+              <td class="repeat">Barcelona</td>
+              <td class="repeat">Camp Nou</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="repeat-key"><span class="swatch"></span> Highlighted cells hold the same three facts over and
+        over.</p>
+
+      <div class="callout key">
+        <h4>How much repetition is that?</h4>
+        <p>There are only <b>6 clubs</b> in this database. But the club's three columns are written out on all
+          <b>24 rows</b> — that is <b>72 cells</b> holding just <b>18</b> pieces of information. Every time you
+          type <i>Santiago Bernabéu</i>, you are storing a fact you already stored three rows earlier.</p>
+      </div>
+
+      <p>Ask the database how many clubs are really in there:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) AS rows, COUNT(DISTINCT team_name) AS clubs
+FROM players_flat;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out"> rows | clubs
+------+-------
+   24 |     6
+(1 row)</pre>
+      </div>
+      <p><code>COUNT(DISTINCT …)</code> counts each club <b>once</b>, however many times its name is repeated.
+        That gap — 24 rows pretending to be 6 clubs — is the repetition we are about to remove.</p>
+    </section>
+
+    <!-- ============ PART 2 ============ -->
+    <section class="part" id="part2">
+      <h2><span class="part-num">2</span> First normal form — one fact per cell</h2>
+      <p class="part-sub">Three rules. We break each one, then fix it.</p>
+
+      <div class="callout key">
+        <h4>The 1NF rules</h4>
+        <p><b>1.</b> Every value is <b>atomic</b> — one fact per cell. Not a list, and not two facts glued
+          together.<br>
+          <b>2.</b> No <b>repeating groups</b> — no <code>player1</code>, <code>player2</code>,
+          <code>player3</code> columns.<br>
+          <b>3.</b> Every row is <b>uniquely identified by a primary key</b>.
+        </p>
+      </div>
+
+      <h3>Rule 1 — one fact per cell</h3>
+      <p>Start with a table that breaks it badly. <code>clubs_bad</code> lists each club's players
+        <b>inside a single cell</b>:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT * FROM clubs_bad;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out">     club_name      |                             players
+--------------------+------------------------------------------------------------------
+ Real Madrid        | Thibaut Courtois, Éder Militão, Jude Bellingham, Vinícius Júnior
+ FC Barcelona       | Marc-André ter Stegen, Ronald Araújo, Pedri, Anthony Gordon
+ Atlético de Madrid | Jan Oblak, José María Giménez, Koke, Antoine Griezmann
+ Athletic Club      | Unai Simón, Óscar de Marcos, Oihan Sancet, Iñaki Williams
+ Sevilla FC         | Ørjan Nyland, Loïc Badé, Nemanja Gudelj, Dodi Lukébakio
+ Real Sociedad      | Álex Remiro, Igor Zubeldia, Brais Méndez, Mikel Oyarzabal
+(6 rows)</pre>
+      </div>
+
+      <p>Six rows, and twenty-four players. Now ask the database how many players it is holding:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) FROM clubs_bad;
+SELECT COUNT(*) FROM players_flat;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out"> count
+-------
+     6
+(1 row)
+
+ count
+-------
+    24
+(1 row)</pre>
+      </div>
+
+      <p>Same 24 players, two different answers — because in <code>clubs_bad</code> the database can only see
+        <b>6 rows</b>. It has no idea how many players are hiding inside those cells.</p>
+
+      <p>And the questions get worse. This is the query you actually want to write:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*) FROM clubs_bad WHERE position = 'Goalkeeper';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out err">ERROR:  column "position" does not exist</pre>
+      </div>
+
+      <div class="callout trap">
+        <h4>⚠ The data is in there — but you cannot reach it</h4>
+        <p>Every player's position is sitting in that cell as part of the text. The database cannot count them,
+          sort them, or join to them, because they are not <b>values</b> — they are words inside a sentence.
+          Data you cannot query is data you do not really have.</p>
+      </div>
+
+      <p>The fix is to give every player <b>their own row</b>. That is exactly what <code>players_flat</code>
+        does — and it is why it has 24 rows. One list, spread downwards into a column:</p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT player_id, player_name, position FROM players_flat ORDER BY player_id LIMIT 4;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out"> player_id |   player_name    |  position
+-----------+------------------+------------
+         1 | Thibaut Courtois | Goalkeeper
+         2 | Éder Militão     | Defender
+         3 | Jude Bellingham  | Midfielder
+         4 | Vinícius Júnior  | Forward
+(4 rows)</pre>
+      </div>
+
+      <p>Rule 1 applies <i>inside</i> a column too. Look closely at <code>player_name</code> — it is still
+        holding two facts in one cell:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT player_name FROM players_flat ORDER BY player_id LIMIT 3;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out">   player_name
+------------------
+ Thibaut Courtois
+ Éder Militão
+ Jude Bellingham
+(3 rows)</pre>
+      </div>
+
+      <p><code>'Thibaut Courtois'</code> is a first name and a last name crammed into one box. You cannot sort
+        the class list by surname, and you cannot search for everyone called Jude, without taking the text
+        apart. Split it into two columns:</p>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>player_name (players_flat)</th>
+              <th>first_name</th>
+              <th>last_name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="repeat">Thibaut Courtois</td>
+              <td>Thibaut</td>
+              <td>Courtois</td>
+            </tr>
+            <tr>
+              <td class="repeat">Marc-André ter Stegen</td>
+              <td>Marc-André</td>
+              <td>ter Stegen</td>
+            </tr>
+            <tr>
+              <td class="repeat">Óscar de Marcos</td>
+              <td>Óscar</td>
+              <td>de Marcos</td>
+            </tr>
+            <tr>
+              <td class="repeat">Pedri</td>
+              <td>Pedri</td>
+              <td>NULL</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout key">
+        <h4>NULL is a real answer</h4>
+        <p>Two of our players — <b>Pedri</b> and <b>Koke</b> — go by one name only. There is no surname to
+          store, so <code>last_name</code> is <code>NULL</code>. That means <i>no value</i>, which is exactly
+          right. Do not invent a surname just to fill the gap.</p>
+      </div>
+
+      <h3>Rule 2 — no repeating groups</h3>
+      <p>The second way to break rule 1 is to spread the list <b>sideways</b> instead of downwards:</p>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>club_name</th>
+              <th>player1</th>
+              <th>player2</th>
+              <th>player3</th>
+              <th>player4</th>
+              <th>player5</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">Real Madrid</td>
+              <td>Thibaut Courtois</td>
+              <td>Éder Militão</td>
+              <td>Jude Bellingham</td>
+              <td>Vinícius Júnior</td>
+              <td class="repeat">?</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="repeat-key">Same mistake, different costume: how many columns do you allow? A club with five
+        players breaks it, and half the columns sit empty for a club with three.</p>
+
+      <h3>Rule 3 — give every row a key</h3>
+      <p><code>players_flat</code> still has no <code>PRIMARY KEY</code>. Without one, nothing stops the same
+        player being stored twice. Try it:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">INSERT INTO players_flat (player_id, player_name, position, team_name, city, stadium)
+VALUES (7, 'Pedri', 'Midfielder', 'FC Barcelona', 'Barcelona', 'Camp Nou');</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out">INSERT 0 1</pre>
+      </div>
+      <p>The database accepted it without complaint. Pedri is now in the table twice — and the two rows are
+        completely identical.</p>
+
+      <div class="callout trap">
+        <h4>⚠ Two identical rows, and no way to tell them apart</h4>
+        <p>Suppose you spot the mistake and try to correct one of them:</p>
+        <pre class="sql">UPDATE players_flat
+SET position = 'Forward'
+WHERE player_name = 'Pedri';</pre>
+        <pre class="out">UPDATE 2</pre>
+        <p>It changed <b>both</b> rows. There was no way to point at just one, because nothing in the table
+          makes one row different from the other. <b>That is what a primary key is for.</b></p>
+      </div>
+
+      <p>The fix is one line. In the data file, <code>players_1nf</code> is <code>players_flat</code> with this
+        added:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">ALTER TABLE players_flat ADD PRIMARY KEY (player_id);</pre>
+      </div>
+      <p>(The file builds it as a separate table instead, so that <code>players_flat</code> stays un-fixed and
+        you can keep comparing the two.)</p>
+
+      <p>Run the <b>same</b> duplicate insert against <code>players_1nf</code>:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">INSERT INTO players_1nf (player_id, first_name, last_name, position, team_name, city, stadium)
+VALUES (7, 'Pedri', NULL, 'Midfielder', 'FC Barcelona', 'Barcelona', 'Camp Nou');</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out err">ERROR:  duplicate key value violates unique constraint "players_1nf_pkey"
+DETAIL:  Key (player_id)=(7) already exists.</pre>
+      </div>
+      <p>The database refuses. <b>That is first normal form.</b></p>
+
+      <h3>So what actually changed?</h3>
+      <p>This is why <code>players_1nf</code> does <i>not</i> look like <code>players_flat</code> any more —
+        three things moved, and not one fact was edited:</p>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th></th>
+              <th>players_flat</th>
+              <th>players_1nf</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">the player's name</td>
+              <td><code>player_name</code> — one cell</td>
+              <td><code>first_name</code> + <code>last_name</code></td>
+            </tr>
+            <tr>
+              <td class="name">primary key</td>
+              <td>none</td>
+              <td><code>player_id</code></td>
+            </tr>
+            <tr>
+              <td class="name">rows</td>
+              <td>24</td>
+              <td>24</td>
+            </tr>
+            <tr>
+              <td class="name">the club's details</td>
+              <td>repeated on all 24 rows</td>
+              <td class="repeat">still repeated — Part 3's job</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout reset">
+        <h4>↺ If you ran that duplicate insert</h4>
+        <p>You now have 25 rows in <code>players_flat</code>. Reload the file to get back to 24:
+          <code>psql -U postgres -d firstnormal -f players.sql</code>.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ PART 3 ============ -->
+    <section class="part" id="part3">
+      <h2><span class="part-num">3</span> Second normal form — one table, one subject</h2>
+      <p class="part-sub">Ask what each column is actually describing.</p>
+
+      <div class="callout key">
+        <h4>The 2NF rule</h4>
+        <p>A table is in 2NF when it is already in 1NF, <b>and every non-key column describes the key — and
+            nothing but the key</b>. No column should be describing some <i>other</i> thing that just happens to
+          be sitting in the same row.</p>
+      </div>
+
+      <p><code>players_1nf</code> has its key: <code>player_id</code>. Now read the seven columns and ask what
+        each one is really about.</p>
+
+      <div class="scroll-x">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>column</th>
+              <th>describes</th>
+              <th>same on all four Real Madrid rows?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name">player_id</td>
+              <td>the player</td>
+              <td>no</td>
+            </tr>
+            <tr>
+              <td class="name">first_name</td>
+              <td>the player</td>
+              <td>no</td>
+            </tr>
+            <tr>
+              <td class="name">last_name</td>
+              <td>the player</td>
+              <td>no</td>
+            </tr>
+            <tr>
+              <td class="name">position</td>
+              <td>the player</td>
+              <td>no</td>
+            </tr>
+            <tr>
+              <td class="name">team_name</td>
+              <td>the club</td>
+              <td class="repeat">yes</td>
+            </tr>
+            <tr>
+              <td class="name">city</td>
+              <td>the club</td>
+              <td class="repeat">yes</td>
+            </tr>
+            <tr>
+              <td class="name">stadium</td>
+              <td>the club</td>
+              <td class="repeat">yes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout key">
+        <h4>The transfer test</h4>
+        <p>Courtois signs for Barcelona tomorrow. Which columns have to change?</p>
+        <p><code>player_id</code>, <code>first_name</code>, <code>last_name</code>, <code>position</code> —
+          unchanged.<br>
+          <code>team_name</code>, <code>city</code>, <code>stadium</code> — all three change, <b>together,
+            always</b>.</p>
+        <p>Three columns that only ever move as a set are not describing the player. They are describing the
+          <b>club</b> — and they are in the wrong table.</p>
+      </div>
+
+      <p>So split them. The player keeps their own facts and a <b>reference</b> to their club; the club's facts
+        move to a table of their own, stored <b>once each</b>:</p>
+
+      <div class="split-map">
+        <div class="split-box">
+          <div class="cap">players_1nf</div>
+          <div class="col player">player_id</div>
+          <div class="col player">first_name</div>
+          <div class="col player">last_name</div>
+          <div class="col player">position</div>
+          <div class="col club">team_name</div>
+          <div class="col club">city</div>
+          <div class="col club">stadium</div>
+        </div>
+        <div class="split-arrow">→</div>
+        <div class="split-right">
+          <div class="split-box">
+            <div class="cap">players_2nf</div>
+            <div class="col player">player_id</div>
+            <div class="col player">first_name</div>
+            <div class="col player">last_name</div>
+            <div class="col player">position</div>
+            <div class="col fk">team_name</div>
+          </div>
+          <div class="split-box">
+            <div class="cap">teams</div>
+            <div class="col club">team_name</div>
+            <div class="col club">city</div>
+            <div class="col club">stadium</div>
+          </div>
+        </div>
+      </div>
+      <p class="split-key"><b class="player">player facts</b> · <b class="club">club facts</b> ·
+        <b class="fk">reference to a club</b>
+      </p>
+
+      <div class="callout key">
+        <h4>Where did city and stadium go?</h4>
+        <p>Look at <code>players_2nf</code> and you will not find <code>city</code> or <code>stadium</code>
+          anywhere. <b>They have not been deleted</b> — they have moved into <code>teams</code>, and
+          <code>team_name</code> is the thread that ties them back to each player.</p>
+        <p>That is the right home for them. A player's city only ever changes when their <i>club</i> changes,
+          so the city is a fact about the club. Keep it here and you would be back to typing it out on all 24
+          rows.</p>
+      </div>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">CREATE TABLE teams (
+  team_name VARCHAR(60) PRIMARY KEY,
+  city      VARCHAR(60),
+  stadium   VARCHAR(80)
+);
+
+INSERT INTO teams (team_name, city, stadium)
+SELECT DISTINCT team_name, city, stadium
+FROM players_flat;</pre>
+      </div>
+      <p><code>SELECT DISTINCT</code> is what <i>pulls the clubs out</i> of the repeated rows — 24 rows go in,
+        <b>6</b> come out. That is the repetition disappearing.
+      </p>
+
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">CREATE TABLE players_2nf (
+  player_id INT PRIMARY KEY,
+  first_name VARCHAR(40),
+  last_name VARCHAR(40),
+  position VARCHAR(20),
+  team_name VARCHAR(60) REFERENCES teams(team_name)
+);</pre>
+      </div>
+      <p>That <code>REFERENCES</code> makes <code>team_name</code> a <b>foreign key</b>: the database will now
+        refuse a player whose club does not exist, exactly as it refused the duplicate player in Part 2:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">INSERT INTO players_2nf (player_id, first_name, last_name, position, team_name)
+VALUES (25, 'Test', 'Player', 'Forward', 'Real Betis');</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out err">ERROR:  insert or update on table "players_2nf" violates foreign key constraint "players_2nf_team_name_fkey"
+DETAIL:  Key (team_name)=(Real Betis) is not present in table "teams".</pre>
+      </div>
+
+      <h3>What the split buys you</h3>
+      <p>Barcelona renames its stadium. In the flat table you have to find and change every row that mentions
+        it:</p>
+      <div class="block">
+        <div class="block-label">Before — on players_flat</div>
+        <pre class="sql">UPDATE players_flat
+SET stadium = 'Spotify Camp Nou'
+WHERE team_name = 'FC Barcelona';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out">UPDATE 4</pre>
+      </div>
+      <p>After the split, the same rename touches one row:</p>
+      <div class="block">
+        <div class="block-label">After — on teams</div>
+        <pre class="sql">UPDATE teams
+SET stadium = 'Spotify Camp Nou'
+WHERE team_name = 'FC Barcelona';</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out">UPDATE 1</pre>
+      </div>
+
+      <div class="callout trap">
+        <h4>⚠ Four rows to get right, or one</h4>
+        <p>Forget one of those four rows in the flat table and your database now holds <b>two different
+            stadiums</b> for the same club — and nothing tells you which one is correct. That is the real cost of
+          repetition: not the disk space, but the chance of being wrong.</p>
+      </div>
+
+      <h3>Nothing was lost</h3>
+      <p>Join the two tables back together and you have the original view again:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT p.first_name, p.last_name, p.position, t.team_name, t.city, t.stadium
+FROM players_2nf p
+JOIN teams t ON t.team_name = p.team_name
+ORDER BY p.player_id
+LIMIT 3;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out"> first_name | last_name  |  position  |  team_name  |  city  |      stadium
+------------+------------+------------+-------------+--------+-------------------
+ Thibaut    | Courtois   | Goalkeeper | Real Madrid | Madrid | Santiago Bernabéu
+ Éder       | Militão    | Defender   | Real Madrid | Madrid | Santiago Bernabéu
+ Jude       | Bellingham | Midfielder | Real Madrid | Madrid | Santiago Bernabéu
+(3 rows)</pre>
+      </div>
+      <p>Every fact we started with is still there. Now count what the join hands back:</p>
+      <div class="block">
+        <div class="block-label">SQL</div>
+        <pre class="sql">SELECT COUNT(*)
+FROM players_2nf p
+JOIN teams t ON t.team_name = p.team_name;</pre>
+      </div>
+      <div class="block">
+        <div class="block-label">Output</div>
+        <pre class="out"> count
+-------
+    24
+(1 row)</pre>
+      </div>
+      <p><b>24</b> — one row per player. Nothing was dropped, and nothing was duplicated. The city and the
+        stadium came back with them, because <code>team_name</code> matched every player to their club.</p>
+
+      <div class="callout win">
+        <h4>✓ "But team_name is still on every player row!"</h4>
+        <p>Yes — and that is fine. It is now a short <b>reference</b> to a row in <code>teams</code>, not a copy
+          of the club's details. The city and the stadium are stored <b>once</b>. Pointing at a fact is cheap;
+          repeating it is what causes trouble.</p>
+      </div>
+    </section>
+
+    <!-- ============ PRACTICE ============ -->
+    <section class="part" id="practice">
+      <h2><span class="part-num">✎</span> Practice</h2>
+      <p class="part-sub">Run each query in psql, then type the number it returns. Your answers are saved as you
+        type.</p>
+
+      <div class="toolbar">
+        <div class="progress-wrap">
+          <div class="progress-label">
+            <span>Progress</span>
+            <span id="progressText">0 of 5 answered</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+        <button class="btn-check" id="checkBtn">Check Answers</button>
+        <button class="btn-clear" id="clearBtn">Clear All</button>
+      </div>
+
+      <div class="score" id="scoreBanner" role="status" aria-live="polite">
+        <h3>Your Score</h3>
+        <p><span class="big" id="scoreBig">0 / 5</span> &nbsp;<span id="scoreMsg"></span></p>
+      </div>
+
+      <div id="questions"></div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="foot-card">
+      <h3>Recap — the one thing to remember</h3>
+      <p style="margin-top:0">Normalising never changes the facts, only where they live.</p>
+      <p style="margin-bottom:0">
+        <b>1NF</b> — one fact per cell, no repeating groups, and a primary key on every table.<br>
+        <b>2NF</b> — every column describes the key and nothing but the key. If a column is really describing
+        something else, that something else needs its own table.<br>
+        Reset the data any time with <code>psql -U postgres -d firstnormal -f players.sql</code>.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ====== Practice questions ====== */
+      var QUESTIONS = [
+        {
+          n: 1, concept: "COUNT(*)",
+          text: "How many player rows does players_flat hold?",
+          answer: 24,
+          hint: "One row per player. Six clubs, four players each.",
+          sql: "SELECT COUNT(*) FROM players_flat;",
+          note: "24 rows — but as you saw, only 6 real clubs are described by them."
+        },
+        {
+          n: 2, concept: "COUNT(DISTINCT …)",
+          text: "How many different clubs are hiding in those 24 rows? Count each club once.",
+          answer: 6,
+          hint: "COUNT(DISTINCT team_name) counts each club once, no matter how many times the name repeats.",
+          sql: "SELECT COUNT(DISTINCT team_name) FROM players_flat;",
+          note: "24 rows, 6 clubs. That gap is exactly the repetition the split removes."
+        },
+        {
+          n: 3, concept: "NULL",
+          text: "Two players go by one name only, so players_1nf has no surname to store for them. How many rows have last_name IS NULL?",
+          answer: 2,
+          hint: "Look at the first_name column — you are looking for the players with only one name.",
+          sql: "SELECT COUNT(*) FROM players_1nf\nWHERE last_name IS NULL;",
+          note: "2 — Pedri and Koke. NULL means 'no value here', which is the honest answer. (This is the same trap as age IS NULL in the Titanic quiz: = NULL never matches anything.)"
+        },
+        {
+          n: 4, concept: "the cost of repetition",
+          text: "Barcelona renames its stadium. How many rows of the un-normalised players_flat have to change?",
+          answer: 4,
+          hint: "The stadium is written on every Barcelona row, and there are four players per club.",
+          sql: "UPDATE players_flat\nSET stadium = 'Spotify Camp Nou'\nWHERE team_name = 'FC Barcelona';",
+          note: "UPDATE 4. Miss one and the same club has two different stadiums stored."
+        },
+        {
+          n: 5, concept: "the payoff",
+          text: "Same rename, but after the split. Now how many rows of teams have to change?",
+          answer: 1,
+          hint: "Each club appears in teams exactly once — it is the primary key of that table.",
+          sql: "UPDATE teams\nSET stadium = 'Spotify Camp Nou'\nWHERE team_name = 'FC Barcelona';",
+          note: "UPDATE 1. Four rows down to one, with no chance of a half-finished rename."
+        }
+      ];
+
+      var STORAGE_KEY = "firstNormal.v2";
+      var TOTAL = QUESTIONS.length;
+
+      /* ====== Storage (safe on file://) ====== */
+      function loadState() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          return raw ? JSON.parse(raw) : {};
+        } catch (e) { return {}; }
+      }
+      function saveState() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        catch (e) { /* storage unavailable — page still works */ }
+      }
+
+      var state = loadState();
+      state.answers = state.answers || {};
+      state.hints = state.hints || {};
+      state.revealed = state.revealed || {};
+
+      function persist() { saveState(); }
+
+      /* ====== Build the practice cards ====== */
+      var container = document.getElementById("questions");
+
+      function esc(s) {
+        return String(s).replace(/[&<>"]/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+      }
+
+      var html = "";
+      QUESTIONS.forEach(function (q) {
+        html += '<section class="q" id="q' + q.n + '" data-n="' + q.n + '">';
+        html += '<div class="q-head">';
+        html += '<div class="q-num">' + q.n + '</div>';
+        html += '<span class="concept">' + esc(q.concept) + '</span>';
+        html += '</div>';
+        html += '<p class="q-text">' + esc(q.text) + '</p>';
+        html += '<div class="answer-row">';
+        html += '<label for="ans' + q.n + '">Your answer:</label>';
+        html += '<input type="text" inputmode="numeric" autocomplete="off" class="ans" id="ans' + q.n + '" data-n="' + q.n + '" placeholder="type a number" aria-label="Answer for question ' + q.n + '">';
+        html += '<span class="result-icon" id="icon' + q.n + '" aria-hidden="true"></span>';
+        html += '</div>';
+        html += '<div class="q-actions">';
+        html += '<button type="button" class="hint-btn" data-n="' + q.n + '">&#128161; Hint</button>';
+        html += '<button type="button" class="reveal-btn" data-n="' + q.n + '">&#128065; Reveal Answer</button>';
+        html += '</div>';
+        html += '<div class="hint" id="hint' + q.n + '"><b>Hint:</b> ' + esc(q.hint) + '</div>';
+        html += '<div class="reveal" id="reveal' + q.n + '">';
+        html += '<div class="ans-line">Answer: ' + q.answer + '</div>';
+        html += '<pre class="sql">' + esc(q.sql) + '</pre>';
+        if (q.note) { html += '<div class="note">' + esc(q.note) + '</div>'; }
+        html += '</div>';
+        html += '</section>';
+      });
+      container.innerHTML = html;
+
+      var inputs = {};
+      QUESTIONS.forEach(function (q) { inputs[q.n] = document.getElementById("ans" + q.n); });
+
+      var progressText = document.getElementById("progressText");
+      var progressFill = document.getElementById("progressFill");
+      var scoreBanner = document.getElementById("scoreBanner");
+      var scoreBig = document.getElementById("scoreBig");
+      var scoreMsg = document.getElementById("scoreMsg");
+
+      /* ====== Restore saved state ====== */
+      QUESTIONS.forEach(function (q) {
+        var n = q.n;
+        if (state.answers[n] !== undefined) {
+          inputs[n].value = state.answers[n];
+        }
+        if (state.hints[n]) {
+          document.getElementById("hint" + n).classList.add("open");
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.add("active");
+        }
+        if (state.revealed[n]) {
+          document.getElementById("reveal" + n).classList.add("open");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.add("active");
+        }
+      });
+
+      /* ====== Normalise + grade ====== */
+      function normalise(val) {
+        if (val === undefined || val === null) return "";
+        return String(val).replace(/,/g, "").replace(/\s/g, "").replace(/^\$/, "").trim();
+      }
+      function isCorrect(n, val) {
+        var v = normalise(val);
+        if (v === "") return false;
+        var num = Number(v);
+        if (isNaN(num)) return false;
+        return Math.abs(num - QUESTIONS[n - 1].answer) < 0.0001;
+      }
+
+      /* ====== Progress ====== */
+      function answeredCount() {
+        return QUESTIONS.filter(function (q) {
+          return normalise(inputs[q.n].value) !== "";
+        }).length;
+      }
+      function updateProgress() {
+        var done = answeredCount();
+        progressText.textContent = done + " of " + TOTAL + " answered";
+        progressFill.style.width = (done / TOTAL * 100) + "%";
+      }
+
+      /* ====== Check answers ====== */
+      function checkAnswers() {
+        var correct = 0, answered = 0;
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          var card = document.getElementById("q" + n);
+          var icon = document.getElementById("icon" + n);
+
+          card.classList.remove("correct", "wrong");
+          inputs[n].classList.remove("correct", "wrong");
+          icon.textContent = "";
+          icon.className = "result-icon";
+
+          if (normalise(inputs[n].value) === "") return;
+
+          answered++;
+          if (isCorrect(n, inputs[n].value)) {
+            correct++;
+            card.classList.add("correct");
+            inputs[n].classList.add("correct");
+            icon.textContent = "\u2713";
+            icon.classList.add("ok");
+          } else {
+            card.classList.add("wrong");
+            inputs[n].classList.add("wrong");
+            icon.textContent = "\u2717";
+            icon.classList.add("no");
+          }
+        });
+
+        var pct = Math.round(correct / TOTAL * 100);
+        scoreBig.textContent = correct + " / " + TOTAL + " (" + pct + "%)";
+        if (answered === 0) {
+          scoreMsg.textContent = "Answer a few questions first, then check.";
+        } else if (correct === TOTAL) {
+          scoreMsg.textContent = "Perfect — you can tell the player facts from the club facts.";
+        } else if (pct >= 70) {
+          scoreMsg.textContent = "Good work. Re-read the red ones and ask what each column describes.";
+        } else {
+          scoreMsg.textContent = "Worth another pass at Parts 1–3 before moving on.";
+        }
+        scoreBanner.classList.add("show");
+        scoreBanner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      /* ====== Clear ====== */
+      function clearAll() {
+        if (!confirm("Clear all answers, hints and revealed answers?")) return;
+        state = { answers: {}, hints: {}, revealed: {} };
+        persist();
+        QUESTIONS.forEach(function (q) {
+          var n = q.n;
+          inputs[n].value = "";
+          inputs[n].classList.remove("correct", "wrong");
+          document.getElementById("q" + n).classList.remove("correct", "wrong");
+          document.getElementById("hint" + n).classList.remove("open");
+          document.getElementById("reveal" + n).classList.remove("open");
+          document.getElementById("icon" + n).textContent = "";
+          document.querySelector('.hint-btn[data-n="' + n + '"]').classList.remove("active");
+          document.querySelector('.reveal-btn[data-n="' + n + '"]').classList.remove("active");
+        });
+        scoreBanner.classList.remove("show");
+        updateProgress();
+      }
+
+      /* ====== Events ====== */
+      container.addEventListener("input", function (e) {
+        var t = e.target;
+        if (!t.classList || !t.classList.contains("ans")) return;
+        var n = t.getAttribute("data-n");
+        state.answers[n] = t.value;
+        persist();
+        updateProgress();
+        t.classList.remove("correct", "wrong");
+        document.getElementById("q" + n).classList.remove("correct", "wrong");
+        document.getElementById("icon" + n).textContent = "";
+      });
+
+      container.addEventListener("click", function (e) {
+        var t = e.target;
+        if (!t.classList) return;
+        var n;
+
+        if (t.classList.contains("hint-btn")) {
+          n = t.getAttribute("data-n");
+          var hint = document.getElementById("hint" + n);
+          hint.classList.toggle("open");
+          t.classList.toggle("active", hint.classList.contains("open"));
+          state.hints[n] = hint.classList.contains("open");
+          persist();
+        }
+
+        if (t.classList.contains("reveal-btn")) {
+          n = t.getAttribute("data-n");
+          var rev = document.getElementById("reveal" + n);
+          rev.classList.toggle("open");
+          t.classList.toggle("active", rev.classList.contains("open"));
+          state.revealed[n] = rev.classList.contains("open");
+          persist();
+        }
+      });
+
+      document.getElementById("checkBtn").addEventListener("click", checkAnswers);
+      document.getElementById("clearBtn").addEventListener("click", clearAll);
+      window.addEventListener("beforeunload", persist);
+
+      updateProgress();
+    })();
+  </script>
 </body>
 
 </html>
